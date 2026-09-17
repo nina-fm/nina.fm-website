@@ -1,4 +1,15 @@
 {
+  "extraKnownMarketplaces": {
+    "nina.fm": {
+      "source": {
+        "source": "github",
+        "repo": "nina-fm/nina.fm-apps-workspace"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "nina@nina.fm": true
+  },
   "hooks": {
     "PreToolUse": [
       {
