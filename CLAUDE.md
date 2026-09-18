@@ -4,7 +4,9 @@ Site public Nina.fm. Nuxt 4 + Vue 3 + SSR. Webradio SSE, interface Peak/Vinyl th
 
 ## Stores — vérifier avant d'en créer un nouveau
 
-`useAppStore`, `useAudioStore` (stream/volume/play), `useBrowserStore`, `useDaylightStore`, `useMetadataStore` (SSE), `useThemeStore` (peak/vinyl)
+Source de vérité : `pinia.storesDirs` de `nuxt.config.ts`.
+
+`useAppStore`, `useAudioStore` (stream/volume/play), `useBrowserStore`, `useDaylightStore`, `useDebugStore`, `useLoadingStore`, `useMetadataStore` (SSE), `useThemeStore` (peak/vinyl) ; par thème, `usePeakThemeStore` et `useVinylThemeStore` (`app/themes/*/stores/`)
 
 ## Conventions
 
@@ -22,4 +24,4 @@ Site public Nina.fm. Nuxt 4 + Vue 3 + SSR. Webradio SSE, interface Peak/Vinyl th
 
 ## SSR Safety
 
-APIs browser toujours dans `import.meta.client` : `window`, `document`, `navigator`, `EventSource`, `Audio`, `localStorage`. SSE toujours côté client, avec `eventSource.close()` dans `onUnmounted`. Env vars : `useRuntimeConfig()` uniquement.
+APIs browser toujours sous `import.meta.client` ou dans un hook client (`onMounted`, `onNuxtReady`, plugin `.client.ts`) : `window`, `document`, `navigator`, `EventSource`, `Audio`, `localStorage`. SSE toujours côté client, par `SseClient` (`app/lib/sse/`), ouvert dans `onNuxtReady` et fermé par `disconnect()` dans `onScopeDispose` (store) ou `onUnmounted` (composant). Env vars : `useRuntimeConfig()` uniquement.
