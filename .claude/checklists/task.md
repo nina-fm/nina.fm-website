@@ -13,7 +13,7 @@ Placer chaque morceau de code que la tâche ajoute ou change :
   nouveau : `app/stores/`, ou `app/themes/<thème>/stores/` pour un état propre à
   un thème ;
 - le rendu va dans un composant ; s'il dépend du thème, prévoir sa variante dans
-  `themes/peak/components/` **et** dans `themes/vinyl/components/`, ou dire
+  `app/themes/peak/components/` **et** dans `app/themes/vinyl/components/`, ou dire
   pourquoi un seul thème est concerné ;
 - ce qui touche au navigateur (audio, SSE, `localStorage`…) reste côté client :
   nommer la garde prévue (`import.meta.client`, hook client, plugin `.client.ts`).

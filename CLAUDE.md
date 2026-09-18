@@ -24,4 +24,4 @@ Source de vérité : `pinia.storesDirs` de `nuxt.config.ts`.
 
 ## SSR Safety
 
-APIs browser toujours dans `import.meta.client` : `window`, `document`, `navigator`, `EventSource`, `Audio`, `localStorage`. SSE toujours côté client, par `SseClient` (`app/lib/sse/`), ouvert dans `onNuxtReady` et fermé par `disconnect()` dans `onScopeDispose` (store) ou `onUnmounted` (composant). Env vars : `useRuntimeConfig()` uniquement.
+APIs browser toujours sous `import.meta.client` ou dans un hook client (`onMounted`, `onNuxtReady`, plugin `.client.ts`) : `window`, `document`, `navigator`, `EventSource`, `Audio`, `localStorage`. SSE toujours côté client, par `SseClient` (`app/lib/sse/`), ouvert dans `onNuxtReady` et fermé par `disconnect()` dans `onScopeDispose` (store) ou `onUnmounted` (composant). Env vars : `useRuntimeConfig()` uniquement.
