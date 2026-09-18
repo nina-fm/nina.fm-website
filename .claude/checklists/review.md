@@ -9,8 +9,9 @@ Les globs se déduisent de `nuxt.config.ts` (`components`, `pinia.storesDirs`), 
 d'un `ls` : les stores de thème de `app/themes/*/stores/` ont échappé au premier jet.
 
 #### Nuxt en SSR (`app/**`)
-- [ ] `window`, `document`, `navigator`, `EventSource`, `Audio` et `localStorage` ne sont touchés que sous `import.meta.client` ou dans un hook client (`onMounted`, plugin `.client.ts`)
+- [ ] `window`, `document`, `navigator`, `EventSource`, `Audio` et `localStorage` ne sont touchés que sous `import.meta.client` ou dans un hook client (`onMounted`, `onNuxtReady`, plugin `.client.ts`)
 - [ ] Le SSE passe par `SseClient` (`app/lib/sse/`), jamais par un `EventSource` ouvert à la main, et chaque client ouvert est fermé (`disconnect()` dans `onScopeDispose` ou `onUnmounted`)
+- [ ] Requêtes HTTP par `$fetch`, `useFetch` ou `useAsyncData`, appelées depuis un store — jamais un `fetch` brut
 - [ ] Variables d'environnement lues par `useRuntimeConfig()` : `process.env` ne sert que dans `nuxt.config.ts`
 - [ ] Aucune URL d'API ou de stream en dur — elles viennent de `runtimeConfig.public`
 

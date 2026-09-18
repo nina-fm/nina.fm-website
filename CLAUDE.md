@@ -22,4 +22,4 @@ Site public Nina.fm. Nuxt 4 + Vue 3 + SSR. Webradio SSE, interface Peak/Vinyl th
 
 ## SSR Safety
 
-APIs browser toujours dans `import.meta.client` : `window`, `document`, `navigator`, `EventSource`, `Audio`, `localStorage`. SSE toujours côté client, avec `eventSource.close()` dans `onUnmounted`. Env vars : `useRuntimeConfig()` uniquement.
+APIs browser toujours dans `import.meta.client` : `window`, `document`, `navigator`, `EventSource`, `Audio`, `localStorage`. SSE toujours côté client, par `SseClient` (`app/lib/sse/`), ouvert dans `onNuxtReady` et fermé par `disconnect()` dans `onScopeDispose` (store) ou `onUnmounted` (composant). Env vars : `useRuntimeConfig()` uniquement.
