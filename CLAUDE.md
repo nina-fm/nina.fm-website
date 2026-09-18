@@ -4,6 +4,8 @@ Site public Nina.fm. Nuxt 4 + Vue 3 + SSR. Webradio SSE, interface Peak/Vinyl th
 
 ## Stores — vérifier avant d'en créer un nouveau
 
+Source de vérité : `pinia.storesDirs` de `nuxt.config.ts`.
+
 `useAppStore`, `useAudioStore` (stream/volume/play), `useBrowserStore`, `useDaylightStore`, `useDebugStore`, `useLoadingStore`, `useMetadataStore` (SSE), `useThemeStore` (peak/vinyl) ; par thème, `usePeakThemeStore` et `useVinylThemeStore` (`app/themes/*/stores/`)
 
 ## Conventions
