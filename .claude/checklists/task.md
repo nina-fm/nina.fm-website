@@ -9,8 +9,9 @@ Placer chaque morceau de code que la tâche ajoute ou change :
 - une règle pure (calcul, parsing, transformation de DTO) va dans
   `app/lib/<domaine>/`, avec son test co-localisé — c'est le seul dossier que
   Vitest collecte et que la couverture mesure ;
-- l'état et ses actions vont dans un store existant de `app/stores/` avant d'en
-  envisager un nouveau ;
+- l'état et ses actions vont dans un store existant avant d'en envisager un
+  nouveau : `app/stores/`, ou `app/themes/<thème>/stores/` pour un état propre à
+  un thème ;
 - le rendu va dans un composant ; s'il dépend du thème, prévoir sa variante dans
   `themes/peak/components/` **et** dans `themes/vinyl/components/`, ou dire
   pourquoi un seul thème est concerné ;

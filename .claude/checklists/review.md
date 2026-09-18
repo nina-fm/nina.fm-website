@@ -5,6 +5,9 @@ Vue 3 et Pinia, thèmes Peak / Vinyl, logique pure de `app/lib/`.
 Les règles génériques (TypeScript, tests, sécurité, langue, changeset, recette)
 vivent dans la commande — ne pas les recopier ici.
 
+Les globs se déduisent de `nuxt.config.ts` (`components`, `pinia.storesDirs`), pas
+d'un `ls` : les stores de thème de `app/themes/*/stores/` ont échappé au premier jet.
+
 #### Nuxt en SSR (`app/**`)
 - [ ] `window`, `document`, `navigator`, `EventSource`, `Audio` et `localStorage` ne sont touchés que sous `import.meta.client` ou dans un hook client (`onMounted`, plugin `.client.ts`)
 - [ ] Le SSE passe par `SseClient` (`app/lib/sse/`), jamais par un `EventSource` ouvert à la main, et chaque client ouvert est fermé (`disconnect()` dans `onScopeDispose` ou `onUnmounted`)
@@ -21,13 +24,13 @@ vivent dans la commande — ne pas les recopier ici.
 - [ ] Icônes importées depuis `lucide-vue-next` (`import { Play } from 'lucide-vue-next'`)
 
 #### Thèmes Peak / Vinyl (`app/themes/**`)
-- [ ] Composant de `themes/peak/components/` préfixé `Peak`, de `themes/vinyl/components/` préfixé `Vinyl`
+- [ ] Fichier nommé sans préfixe (`Player.vue`) et utilisé sous son nom préfixé (`<PeakPlayer>`, `<VinylDisk>`) : le préfixe vient de `components` dans `nuxt.config.ts`, un fichier `PeakPlayer.vue` donnerait `<PeakPeakPlayer>`
 - [ ] Deux variantes d'un même composant gardent les mêmes props
 - [ ] Un changement porté par un thème est vérifié sur l'autre : le reporter, ou dire dans la PR pourquoi il ne s'y applique pas
 
-#### Stores Pinia (`app/stores/**`)
+#### Stores Pinia (`app/stores/**`, `app/themes/**/stores/**`)
 - [ ] Syntaxe setup — `defineStore('id', () => { … })`
-- [ ] Nouveau store : aucun store existant de `app/stores/` ne couvrait déjà le besoin
+- [ ] Nouveau store : aucun store existant ne couvrait déjà le besoin, ni dans `app/stores/` ni dans les stores de thème `app/themes/*/stores/` (`pinia.storesDirs` de `nuxt.config.ts`)
 - [ ] État muté seulement par les actions du store, jamais depuis un composant
 
 #### Logique pure et tests (tout le repo)
