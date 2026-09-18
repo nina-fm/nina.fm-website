@@ -1,5 +1,9 @@
 name: Deploy Prod
 
+# Déploiement uniquement. La validation des pull requests vit dans `ci.yml`,
+# qui tourne sans secret ni droit d'écriture. Le job `quality` est conservé ici
+# comme garde avant déploiement.
+
 on:
   push:
     branches: [main]
@@ -16,13 +20,11 @@ env:
   HUSKY: '0'
 
 jobs:
+  # Même configuration que la CI des pull requests, définie une seule fois.
+  # Rejouée ici parce que le merge en squash produit sur `main` un commit qui
+  # n'a jamais existé sous cette forme, donc jamais été testé tel quel.
   quality:
-    uses: nina-fm/nina.fm-apps-workspace/.github/workflows/node-validate.yml@main
-    with:
-      node-version: '22'
-      type-check: true
-      lint-strict: false
-      codecov-enabled: true
+    uses: ./.github/workflows/validate.yml
     secrets: inherit
 
   versioning:

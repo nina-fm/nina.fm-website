@@ -1,0 +1,26 @@
+name: CI
+
+# Validation des pull requests. Séparée de `deploy.yml` par déclencheur et par
+# privilège : elle n'a besoin ni d'écrire, ni des secrets de déploiement
+# (SERVER_HOST, SSH_PRIVATE_KEY…) que `deploy.yml` transmet par
+# `secrets: inherit`. Aucun secret n'est passé à `validate.yml`.
+#
+# La configuration qualité elle-même est dans `validate.yml`, partagée avec
+# `deploy.yml`, pour qu'une PR et `main` ne puissent pas rendre des verdicts
+# différents.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un push sur une PR annule la validation en cours : seul le dernier état compte.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
