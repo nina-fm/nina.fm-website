@@ -1,0 +1,28 @@
+name: Validate
+
+# Configuration qualité du repo, définie **une seule fois** et appelée par
+# `ci.yml` (pull requests) comme par `deploy.yml` (garde avant déploiement).
+# Deux jeux d'entrées séparés finiraient par diverger et produiraient des
+# verdicts contradictoires entre une PR et `main`.
+#
+# Les étapes elles-mêmes vivent dans `node-validate.yml` au niveau workspace.
+# Même motif que `nina.fm-api` et `nina.fm-mixtaper`.
+#
+# Les secrets viennent de l'appelant : `deploy.yml` les transmet (Codecov sur
+# `main`), `ci.yml` n'en transmet aucun. C'est la garde
+# `github.ref == refs/heads/main` qui saute Codecov sur une PR, pas l'absence
+# de secret : un `ci.yml` lancé à la main sur `main` tente l'envoi sans token,
+# sans faire échouer le job (`fail_ci_if_error: false`).
+
+on:
+  workflow_call:
+
+jobs:
+  quality:
+    uses: nina-fm/nina.fm-apps-workspace/.github/workflows/node-validate.yml@main
+    with:
+      node-version: '22'
+      type-check: true
+      lint-strict: false
+      codecov-enabled: true
+    secrets: inherit
