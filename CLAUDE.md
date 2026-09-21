@@ -27,5 +27,5 @@ APIs browser toujours sous `import.meta.client` ou dans un hook client (`onMount
 ## Plan
 
 Le plan vit dans le Project GitHub **Website** (https://github.com/orgs/nina-fm/projects/4),
-pas dans `docs/` — `NINA_PROJECT=4` dans `.claude/settings.json`. Les conventions de
-pilotage sont dans le `CLAUDE.md` du workspace.
+pas dans `docs/` ; `NINA_PROJECT` (`.claude/settings.json`) le branche. Les conventions
+de pilotage sont dans le `CLAUDE.md` du workspace.
