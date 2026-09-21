@@ -13,7 +13,6 @@ Site web public de Nina.fm. Diffuse la webradio en temps réel via SSE avec un p
 - **[Nuxt 4](https://nuxt.com/)** + Vue 3 — SSR activé
 - **[Pinia](https://pinia.vuejs.org/)** — état global (audio, métadonnées, thème…)
 - **[Tailwind CSS](https://tailwindcss.com/)** — styling
-- **SuperTokens** — authentification
 - **SSE** — métadonnées en temps réel depuis `nina.fm-api`
 
 ## Démarrage rapide
