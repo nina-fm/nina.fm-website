@@ -2,6 +2,11 @@
   "env": {
     "NINA_PROJECT": "4"
   },
+  "permissions": {
+    "additionalDirectories": [
+      "../nina.fm-api"
+    ]
+  },
   "extraKnownMarketplaces": {
     "nina.fm": {
       "source": {
