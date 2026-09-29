@@ -1,5 +1,11 @@
 # nina.fm-website
 
+## 2.2.8
+
+### Patch Changes
+
+- 4de47c1: Basculer le déploiement sur le workflow partagé build-release — la release ne bloque plus la mise en prod, no-cache n'écrit plus le cache
+
 ## 2.2.7
 
 ### Patch Changes
