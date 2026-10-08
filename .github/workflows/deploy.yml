@@ -21,9 +21,14 @@ jobs:
   # Même configuration que la CI des pull requests, définie une seule fois.
   # Rejouée ici parce que le merge en squash produit sur `main` un commit qui
   # n'a jamais existé sous cette forme, donc jamais été testé tel quel.
+  # En lecture seule, et avec le seul `CODECOV_TOKEN` : le repo accorde
+  # l'écriture par défaut, dont ni l'installation ni les tests n'ont besoin.
   quality:
+    permissions:
+      contents: read
     uses: ./.github/workflows/validate.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   versioning:
     needs: quality
@@ -138,10 +143,17 @@ jobs:
               fi
             done
 
+  # Le nettoyage n'utilise que l'accès SSH : ni le token en écriture, ni les
+  # autres secrets du repo et de l'organisation qu'un `inherit` lui donnerait.
   post-deploy:
     needs: deploy
     if: always() && needs.deploy.result != 'skipped'
+    permissions:
+      contents: read
     uses: nina-fm/nina.fm-apps-workspace/.github/workflows/cleanup.yml@main
     with:
       image-name: ghcr.io/${{ github.repository }}
-    secrets: inherit
+    secrets:
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
