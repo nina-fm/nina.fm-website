@@ -6,7 +6,7 @@ name: Validate
 # verdicts contradictoires entre une PR et `main`.
 #
 # Les étapes elles-mêmes vivent dans `node-validate.yml` au niveau workspace.
-# Même motif que `nina.fm-api` et `nina.fm-mixtaper`.
+# Même motif que `nina.fm-api` et `nina.fm-faceb`.
 #
 # Seul `CODECOV_TOKEN` est accepté, et transmis nommément : pas de
 # `secrets: inherit`, qui ferait descendre jusqu'ici les secrets de déploiement.

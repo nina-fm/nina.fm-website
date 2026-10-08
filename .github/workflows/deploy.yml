@@ -30,6 +30,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  # Aucun secret : `release.yml` pousse son commit de version avec `GITHUB_TOKEN`.
   versioning:
     needs: quality
     permissions:
@@ -37,7 +38,6 @@ jobs:
     uses: nina-fm/nina.fm-apps-workspace/.github/workflows/release.yml@main
     with:
       skip-ci: true
-    secrets: inherit
 
   # Image, labels OCI, cache de registre et GitHub Release, communs aux apps.
   # La release y est non bloquante : un échec des notes ne saute plus `deploy`.
@@ -143,13 +143,12 @@ jobs:
               fi
             done
 
-  # Le nettoyage n'utilise que l'accès SSH : ni le token en écriture, ni les
-  # autres secrets du repo et de l'organisation qu'un `inherit` lui donnerait.
+  # Le nettoyage n'utilise que l'accès SSH : ni `GITHUB_TOKEN`, ni les autres
+  # secrets du repo et de l'organisation qu'un `inherit` lui donnerait.
   post-deploy:
     needs: deploy
     if: always() && needs.deploy.result != 'skipped'
-    permissions:
-      contents: read
+    permissions: {}
     uses: nina-fm/nina.fm-apps-workspace/.github/workflows/cleanup.yml@main
     with:
       image-name: ghcr.io/${{ github.repository }}
