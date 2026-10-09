@@ -1,5 +1,11 @@
 # nina.fm-website
 
+## 2.2.10
+
+### Patch Changes
+
+- 24410a9: fix(deploy): le GITHUB_TOKEN ne reste plus sur le serveur et n'apparaît plus dans `ps`
+
 ## 2.2.9
 
 ### Patch Changes
