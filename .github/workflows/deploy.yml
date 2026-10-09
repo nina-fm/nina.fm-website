@@ -68,36 +68,46 @@ jobs:
       packages: read
 
     steps:
+      # Le compose du commit déployé, lu ici et transmis au serveur : le GITHUB_TOKEN n'a
+      # plus à sortir du runner pour le télécharger (workspace#76). Délimiteur aléatoire :
+      # une ligne du fichier ne peut pas clore la valeur.
+      - name: Checkout du compose
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: docker-compose.yml
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Lire le compose
+        id: compose
+        run: |
+          delim="EOF_$(openssl rand -hex 16)"
+          { echo "content<<$delim"; cat docker-compose.yml; echo "$delim"; } >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum docker-compose.yml | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      # Le jeton passe par stdin et ne reste pas sur le serveur (workspace#76).
       - name: Pull Docker image
-        uses: appleboy/ssh-action@v1.2.5
+        timeout-minutes: 15
+        uses: nina-fm/nina.fm-apps-workspace/.github/actions/ghcr-pull@main
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 15m
-          script: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            echo "📥 Pulling image..."
-            for i in 1 2 3; do
-              if docker pull ${{ needs.build.outputs.image }}:latest; then
-                echo "✅ Pull successful"
-                exit 0
-              else
-                echo "⚠️ Pull attempt $i failed, retrying..."
-                sleep 5
-              fi
-            done
-            echo "❌ Pull failed after 3 attempts"
-            exit 1
+          image: ${{ needs.build.outputs.image }}:latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+          retries: '3'
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.5
+        env:
+          COMPOSE: ${{ steps.compose.outputs.content }}
+          COMPOSE_SHA256: ${{ steps.compose.outputs.sha256 }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 5m
+          envs: COMPOSE,COMPOSE_SHA256
           script: |
             mkdir -p /var/nina/website/deploy
 
@@ -118,10 +128,8 @@ jobs:
             docker stop nina-website 2>/dev/null || echo "Aucun conteneur nina-website à arrêter"
             docker rm nina-website 2>/dev/null || echo "Aucun conteneur nina-website à supprimer"
 
-            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                 -H "Accept: application/vnd.github.v3.raw" \
-                 -o docker-compose.yml \
-                 "https://api.github.com/repos/${{ github.repository }}/contents/docker-compose.yml"
+            printf '%s\n' "$COMPOSE" > docker-compose.yml
+            echo "$COMPOSE_SHA256  docker-compose.yml" | sha256sum -c || { echo "❌ Compose corrompu en transit"; exit 1; }
 
             docker compose --env-file /var/nina/website/.env up -d --force-recreate
 
