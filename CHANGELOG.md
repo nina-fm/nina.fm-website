@@ -1,5 +1,11 @@
 # nina.fm-website
 
+## 2.2.11
+
+### Patch Changes
+
+- e764bfd: Healthcheck allégé : `wget` au lieu de `node -e`, intervalle de 2 minutes avec détection rapide au démarrage (`start_interval`).
+
 ## 2.2.10
 
 ### Patch Changes
