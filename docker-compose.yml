@@ -19,18 +19,18 @@ services:
     networks:
       - nina-network
 
+    # wget de busybox plutôt que `node -e` : chaque vérification coûtait ~100 ms de CPU
+    # (démarrage de Node) sur un serveur à 1 vCPU, contre ~30 ms. 127.0.0.1 et non
+    # localhost, que busybox résout en ::1 alors que l'app n'écoute qu'en IPv4.
+    # Intervalle long : Docker ne redémarre pas un conteneur unhealthy, le statut ne sert
+    # qu'au diagnostic ; start_interval garde une détection rapide au démarrage.
     healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://localhost:3000/', (res) => process.exit(res.statusCode === 200 ? 0 : 1))",
-        ]
-      interval: 30s
-      timeout: 3s
+      test: ["CMD", "wget", "-q", "--spider", "-T", "3", "http://127.0.0.1:3000/"]
+      interval: 2m
+      timeout: 5s
       retries: 3
       start_period: 40s
+      start_interval: 2s
 
     logging:
       driver: "json-file"
