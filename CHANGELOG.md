@@ -1,5 +1,11 @@
 # nina.fm-website
 
+## 2.2.12
+
+### Patch Changes
+
+- f7278e2: fix(about): afficher le logo Mixcloud au lieu de celui de SoundCloud
+
 ## 2.2.11
 
 ### Patch Changes
