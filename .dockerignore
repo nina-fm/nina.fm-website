@@ -66,3 +66,6 @@ ecosystem.config.cjs
 
 # Netlify
 netlify.toml
+
+# Site Astro (#75) : son propre contexte de build, hors de l'image Nuxt
+astro

@@ -23,8 +23,14 @@
   },
   "lint-staged": {
     "**/*.{ts,vue}": [
-      "eslint --fix",
+      "eslint --fix --no-warn-ignored",
       "prettier --write"
+    ],
+    "astro/**/*.{ts,tsx,astro,js,mjs,css,json,yml}": [
+      "pnpm --dir astro exec prettier --write"
+    ],
+    "astro/**/*.{ts,tsx,astro,js}": [
+      "pnpm --dir astro exec eslint --fix --max-warnings 0"
     ]
   },
   "dependencies": {
