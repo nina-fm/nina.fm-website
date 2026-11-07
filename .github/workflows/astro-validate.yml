@@ -28,9 +28,14 @@ jobs:
       run:
         working-directory: astro
     steps:
+      # astro/ seul : le projet doit se construire sans la racine Nuxt. Au build, rolldown
+      # remonte jusqu'au tsconfig de la racine, qui étend un .nuxt/ absent tant que
+      # `nuxt prepare` n'a pas tourné (`Tsconfig not found`, PR #82).
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          sparse-checkout: astro/
+          sparse-checkout-cone-mode: false
           persist-credentials: false
 
       - name: Setup pnpm
