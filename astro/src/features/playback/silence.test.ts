@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { silentWav } from './silence.ts'
 
 describe('silentWav', () => {
-  it('is a PCM WAV of the requested length, entirely on the zero line', () => {
+  it('should be a PCM WAV of the requested length when generated, all on the zero line', () => {
     const wav = silentWav(2)
     const view = new DataView(wav.buffer)
     const text = (offset: number) => String.fromCharCode(...wav.subarray(offset, offset + 4))

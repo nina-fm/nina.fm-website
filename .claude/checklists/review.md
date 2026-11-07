@@ -1,7 +1,8 @@
 # Checklist de review — nina.fm-website
 
 Ce que le tronc commun de `/nina:review` ne couvre pas : Nuxt en SSR, conventions
-Vue 3 et Pinia, thèmes Peak / Vinyl, logique pure de `app/lib/`.
+Vue 3 et Pinia, thèmes Peak / Vinyl, logique pure de `app/lib/`, et le site Astro de
+`astro/` (epic #75), dont les sections Nuxt ne s'appliquent pas.
 Les règles génériques (TypeScript, tests, sécurité, langue, changeset, recette)
 vivent dans la commande — ne pas les recopier ici.
 
@@ -34,6 +35,13 @@ d'un `ls` : les stores de thème de `app/themes/*/stores/` ont échappé au prem
 - [ ] Nouveau store : aucun store existant ne couvrait déjà le besoin, ni dans `app/stores/` ni dans les stores de thème `app/themes/*/stores/` (`pinia.storesDirs` de `nuxt.config.ts`)
 - [ ] État muté seulement par les actions du store, jamais depuis un composant
 
-#### Logique pure et tests (tout le repo)
-- [ ] Vitest ne collecte que `app/lib/**/*.test.ts` (`vitest.config.ts`) : un test posé ailleurs ne tourne jamais — la logique testable va dans `app/lib/`
+#### Logique pure et tests du Nuxt (`app/**`)
+- [ ] Vitest ne collecte que `app/lib/**/*.test.ts` (`vitest.config.ts` de la racine) : un test posé ailleurs ne tourne jamais — la logique testable va dans `app/lib/`
 - [ ] Une fonction pure extraite d'un store ou d'un composant arrive dans `app/lib/<domaine>/` avec son test : le seuil de couverture de 80 % porte sur `app/lib/` (hors `browser/`)
+
+#### Site Astro (`astro/**`)
+- [ ] Le rôle du fichier tient à son nom (`astro/CLAUDE.md`) : `.ts` pur, `.store.ts` état Solid, `.client.ts` effet navigateur sans Solid, `.tsx` rendu sans hook ; une règle pure sortie d'un store va dans un `.ts` avec son test
+- [ ] Les tests vivent à côté du module, sous `astro/src/` (son `vitest.config.ts` collecte `src/**/*.test.ts`), et une donnée de test partagée dans un `.fixture.ts`
+- [ ] `play()` s'appelle dans la tâche même du geste (iOS), jamais depuis un effet ni après un `await`
+- [ ] Un îlot ne lit l'état de module (`player`, `metadata`) qu'après `onMount` : hydraté après un changement, il garderait sinon les valeurs du rendu statique
+- [ ] Le JavaScript ajouté tient dans le budget (`pnpm perf:budget`) ; un budget relevé l'est sciemment, daté, dans `scripts/performance-budget.ts`

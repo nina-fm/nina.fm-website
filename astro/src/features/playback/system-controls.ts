@@ -5,7 +5,7 @@ import type { PlayingRadio } from './player.ts'
 /**
  * Ce que l'antenne diffuse, tel que les contrôles système le montrent : la
  * mixtape, ou le morceau seul. Donné par les métadonnées SSE
- * (`metadata/metadata.store.ts`), que ce domaine n'importe jamais.
+ * (`metadata/metadata.store.ts`), que les contrôles système n'importent jamais.
  */
 export interface SystemTrack {
   title: string

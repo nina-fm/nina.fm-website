@@ -1,14 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { PlayingRadio } from './player.ts'
+import { createMockRadio } from './radio.fixture.ts'
 
-const panik: PlayingRadio = {
-  id: 'radio-panik',
-  name: 'Radio Panik',
-  streamUrl: 'https://example.org/panik.mp3',
-  imageUrl: '/_astro/panik.webp',
-}
+const nina = createMockRadio()
 
-/** Listeners by event type, for the stand-ins below. */
+/** Les écouteurs par type d'événement, pour les doublures ci-dessous. */
 const listenersOf = () => {
   const listeners = new Map<string, (() => void)[]>()
   return {
@@ -26,9 +21,9 @@ const ANDROID =
   'Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Mobile Safari/537.36'
 
 /**
- * A locked phone. An iPhone (on-device-checks 1.1, 2026-10-19) suspends a page
- * that plays nothing, and a silence started right after pausing the stream
- * stalls; Chrome on Android shows a playing element as playing.
+ * Un téléphone verrouillé. Un iPhone (vérifications sur appareil d'ohmyradios 1.1,
+ * 2026-10-19) suspend une page qui ne joue rien, et un silence lancé juste après la
+ * pause du flux se bloque ; Chrome sur Android montre en lecture un élément qui joue.
  */
 async function lockedPhone(userAgent = IPHONE) {
   const actions = new Map<string, () => void>()
@@ -44,7 +39,7 @@ async function lockedPhone(userAgent = IPHONE) {
       setActionHandler: (action: string, handler: () => void) => actions.set(action, handler),
     },
   })
-  vi.stubGlobal('location', { origin: 'https://ohmyradios.example' })
+  vi.stubGlobal('location', { origin: 'https://www.nina.example' })
   vi.stubGlobal('MediaMetadata', class {})
   vi.resetModules()
   const controls = await import('./controls.client.ts')
@@ -56,7 +51,7 @@ async function lockedPhone(userAgent = IPHONE) {
     loop: false,
     paused: true,
     currentTime: 0,
-    /** Calls to `pause()`, the source paused each time. */
+    /** Les appels à `pause()`, avec la source mise en pause à chaque fois. */
     pauses: [] as string[],
     play() {
       audio.paused = false
@@ -85,17 +80,17 @@ describe('the lock screen pause on a locked phone', () => {
     vi.unstubAllGlobals()
   })
 
-  it('keeps the page awake with the silence for ten minutes, so that play can resume', async () => {
+  it('should keep the page awake with the silence for ten minutes when paused, so that play can resume', async () => {
     vi.useFakeTimers()
     const { controls, player, audio, press } = await lockedPhone()
-    controls.play(panik)
+    controls.play(nina)
     audio.fire('playing')
     expect(player.state.status).toBe('playing')
 
     press('pause')
     expect(player.state.status).toBe('paused')
     expect(navigator.mediaSession.playbackState).toBe('paused')
-    // The stream is swapped for the silence without being paused first.
+    // Le flux est remplacé par le silence sans être mis en pause d'abord.
     expect(audio.pauses).toEqual([])
     expect(audio.src.startsWith('blob:')).toBe(true)
     audio.fire('playing')
@@ -108,62 +103,62 @@ describe('the lock screen pause on a locked phone', () => {
     expect(player.state.status).toBe('paused')
 
     press('play')
-    expect(audio.src).toBe(panik.streamUrl)
+    expect(audio.src).toBe(nina.streamUrl)
     expect(player.state.status).toBe('loading')
     controls.detachElement()
   })
 
-  it('plays again from the lock screen while the silence keeps the page awake', async () => {
+  it('should play again when play is pressed while the silence keeps the page awake', async () => {
     vi.useFakeTimers()
     const { controls, player, audio, press } = await lockedPhone()
-    controls.play(panik)
+    controls.play(nina)
     audio.fire('playing')
     press('pause')
     audio.fire('playing')
 
     press('play')
-    expect(audio.src).toBe(panik.streamUrl)
+    expect(audio.src).toBe(nina.streamUrl)
     audio.fire('playing')
     expect(player.state.status).toBe('playing')
-    // The ten minutes no longer run: nothing pauses the stream.
+    // Les dix minutes ne courent plus : rien ne met le flux en pause.
     vi.advanceTimersByTime(10 * 60_000)
     expect(audio.paused).toBe(false)
     controls.detachElement()
   })
 
-  it("plays again on the headphones' second press, which iOS sends as pause", async () => {
+  it('should play again when the headset is pressed twice, which iOS sends as pause', async () => {
     vi.useFakeTimers()
     const { controls, player, audio, press } = await lockedPhone()
-    controls.play(panik)
+    controls.play(nina)
     audio.fire('playing')
     press('pause')
-    // The silence plays: WebKit sees the element playing, and the toggle
-    // sends pause again.
+    // Le silence joue : WebKit voit l'élément en lecture, et la bascule renvoie
+    // pause.
     audio.fire('playing')
 
     press('pause')
-    expect(audio.src).toBe(panik.streamUrl)
+    expect(audio.src).toBe(nina.streamUrl)
     expect(player.state.status).toBe('loading')
     audio.fire('playing')
     expect(player.state.status).toBe('playing')
     controls.detachElement()
   })
 
-  it('leaves the element a call paused to the iPhone, which plays again once the call ends', async () => {
+  it('should leave the element to the iPhone when a call paused it, and play again once it ends', async () => {
     vi.useFakeTimers()
     const { controls, player, audio, press } = await lockedPhone()
-    controls.play(panik)
+    controls.play(nina)
     audio.fire('playing')
 
-    // The ringing: the system pauses the element.
+    // La sonnerie : le système met l'élément en pause.
     audio.paused = true
     audio.fire('pause')
     expect(player.state.status).toBe('paused')
     expect(audio.pauses).toEqual([])
-    expect(audio.src).toBe(panik.streamUrl)
+    expect(audio.src).toBe(nina.streamUrl)
     expect(navigator.mediaSession.playbackState).toBe('paused')
 
-    // The call ends: the system sends play.
+    // L'appel se termine : le système envoie play.
     press('play')
     expect(player.state.status).toBe('loading')
     expect(audio.paused).toBe(false)
@@ -172,57 +167,57 @@ describe('the lock screen pause on a locked phone', () => {
     controls.detachElement()
   })
 
-  it('takes the pause a call sends, once it cut the element, for the system, never for a press', async () => {
+  it('should take the pause as imposed when a call sends it after cutting the element', async () => {
     vi.useFakeTimers()
     const { controls, player, audio, press } = await lockedPhone()
-    controls.play(panik)
+    controls.play(nina)
     audio.fire('playing')
 
-    // The ringing on iOS 27: the element is cut, then pause is sent.
+    // La sonnerie sur iOS 27 : l'élément est coupé, puis pause est envoyé.
     audio.paused = true
     press('pause')
     audio.fire('pause')
     expect(player.state.status).toBe('paused')
-    // An imposed pause: the stream is kept, and no silence plays.
-    expect(audio.src).toBe(panik.streamUrl)
+    // Une pause imposée : le flux est gardé, et aucun silence ne joue.
+    expect(audio.src).toBe(nina.streamUrl)
     expect(audio.paused).toBe(true)
 
-    // Answered: pause again, the element still cut. Not the headset's toggle.
+    // Décroché : pause de nouveau, l'élément toujours coupé. Pas la bascule du casque.
     press('pause')
     expect(player.state.status).toBe('paused')
     expect(audio.paused).toBe(true)
 
-    // The call ends.
+    // L'appel se termine.
     press('play')
     expect(player.state.status).toBe('loading')
     controls.detachElement()
   })
 
-  it('pauses the element a call paused again on Android, which resumes it all the same', async () => {
+  it('should pause the element again when a call paused it on Android, which resumes it all the same', async () => {
     vi.useFakeTimers()
     const { controls, player, audio } = await lockedPhone(ANDROID)
-    controls.play(panik)
+    controls.play(nina)
     audio.fire('playing')
 
     audio.paused = true
     audio.fire('pause')
     expect(player.state.status).toBe('paused')
-    expect(audio.pauses).toEqual([panik.streamUrl])
+    expect(audio.pauses).toEqual([nina.streamUrl])
     controls.detachElement()
   })
 
-  it('pauses the silence at once on Android, where it would show as playing', async () => {
+  it('should pause the silence at once when on Android, where it would show as playing', async () => {
     const { controls, player, audio, press } = await lockedPhone(ANDROID)
-    controls.play(panik)
+    controls.play(nina)
     audio.fire('playing')
 
     press('pause')
-    expect(audio.pauses).toEqual([panik.streamUrl])
+    expect(audio.pauses).toEqual([nina.streamUrl])
     expect(audio.src.startsWith('blob:')).toBe(true)
-    // Started, as Chrome keeps in its session only an element that played (E6)…
+    // Lancé, car Chrome ne garde dans sa session qu'un élément qui a joué (E6)…
     expect(audio.paused).toBe(false)
     audio.fire('playing')
-    // …then paused.
+    // …puis mis en pause.
     expect(audio.paused).toBe(true)
     expect(player.state.status).toBe('paused')
     controls.detachElement()

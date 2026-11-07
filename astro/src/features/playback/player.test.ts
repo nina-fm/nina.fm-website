@@ -1,20 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPlayer } from './player.store.ts'
-import { type Player, type PlayingRadio, isListening } from './player.ts'
+import { type Player, isListening } from './player.ts'
+import { createMockRadio } from './radio.fixture.ts'
 
-const fip: PlayingRadio = {
-  id: 'fip',
-  name: 'FIP',
-  streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3',
-  imageUrl: '/_astro/fip.webp',
-}
+const nina = createMockRadio()
 
-const panik: PlayingRadio = {
-  id: 'radio-panik',
-  name: 'Radio Panik',
-  streamUrl: 'https://streaming.domainepublic.net/radiopanik.mp3',
-  imageUrl: '/_astro/radio-panik.webp',
-}
+/** Une seconde radio, pour l'invariant « un seul flux à la fois » seulement. */
+const other = createMockRadio({ id: 'other', name: 'Autre radio', streamUrl: 'https://flux.autre.example/live.mp3' })
 
 describe('player state', () => {
   let player: Player
@@ -23,49 +15,49 @@ describe('player state', () => {
     player = createPlayer()
   })
 
-  it('starts stopped, with no radio at all', () => {
+  it('should be stopped with no radio when created', () => {
     expect(player.state.status).toBe('stopped')
     expect(player.state.radio).toBeNull()
   })
 
   describe('lifecycle of a playback', () => {
-    it('goes through loading before established playback', () => {
-      player.request(fip)
+    it('should go through loading when playback is requested, then playing', () => {
+      player.request(nina)
       expect(player.state.status).toBe('loading')
-      expect(player.state.radio).toEqual(fip)
+      expect(player.state.radio).toEqual(nina)
 
       player.confirmPlaying()
       expect(player.state.status).toBe('playing')
     })
 
-    it('reports an error without losing the radio concerned', () => {
-      player.request(fip)
+    it('should keep the radio when an error is reported', () => {
+      player.request(nina)
       player.reportError()
 
       expect(player.state.status).toBe('error')
-      // The radio stays known: the interface must be able to name the one that
-      // is unavailable, rather than showing an anonymous error.
-      expect(player.state.radio).toEqual(fip)
+      // La radio reste connue : l'interface doit pouvoir nommer celle qui est
+      // indisponible, plutôt que d'afficher une erreur anonyme.
+      expect(player.state.radio).toEqual(nina)
     })
 
-    it('reports being offline apart from an error, keeping the radio', () => {
-      player.request(fip)
+    it('should report offline apart from an error when the device has no connection', () => {
+      player.request(nina)
       player.reportOffline()
 
       expect(player.state.status).toBe('offline')
-      expect(player.state.radio).toEqual(fip)
+      expect(player.state.radio).toEqual(nina)
     })
 
-    it('goes back to loading when the stream re-buffers', () => {
-      player.request(fip)
+    it('should go back to loading when the stream re-buffers', () => {
+      player.request(nina)
       player.confirmPlaying()
       player.reportLoading()
 
       expect(player.state.status).toBe('loading')
     })
 
-    it('returns to the initial state on stop', () => {
-      player.request(fip)
+    it('should return to the initial state when stopped', () => {
+      player.request(nina)
       player.confirmPlaying()
       player.stop()
 
@@ -75,18 +67,18 @@ describe('player state', () => {
   })
 
   describe('pause', () => {
-    it('pauses without forgetting the radio', () => {
-      player.request(fip)
+    it('should keep the radio when paused', () => {
+      player.request(nina)
       player.confirmPlaying()
       player.pause()
 
-      // The lock screen keeps showing it, and can resume it.
+      // L'écran verrouillé continue de la montrer, et peut la reprendre.
       expect(player.state.status).toBe('paused')
-      expect(player.state.radio).toEqual(fip)
+      expect(player.state.radio).toEqual(nina)
     })
 
-    it('ignores events lagging behind a pause', () => {
-      player.request(fip)
+    it('should ignore events when they lag behind a pause', () => {
+      player.request(nina)
       player.pause()
       player.confirmPlaying()
       player.reportLoading()
@@ -96,23 +88,23 @@ describe('player state', () => {
       expect(player.state.status).toBe('paused')
     })
 
-    it('resumes on a new request', () => {
-      player.request(fip)
+    it('should resume when a new request follows a pause', () => {
+      player.request(nina)
       player.pause()
-      player.request(fip)
+      player.request(nina)
 
       expect(player.state.status).toBe('loading')
     })
 
-    it('does not pause a stopped player', () => {
+    it('should not pause when the player is stopped', () => {
       player.pause()
 
       expect(player.state.status).toBe('stopped')
     })
 
-    it('keeps the message of an abandoned listening', () => {
+    it('should keep the message when the listening was already abandoned', () => {
       for (const report of ['reportError', 'reportOffline', 'reportInterrupted'] as const) {
-        player.request(fip)
+        player.request(nina)
         player[report]()
         const status = player.state.status
         player.pause()
@@ -123,47 +115,47 @@ describe('player state', () => {
   })
 
   describe('reconnection', () => {
-    it('reports a reconnection apart from loading and error, keeping the radio', () => {
-      player.request(fip)
+    it('should report reconnecting apart from loading and error when the stream is restored', () => {
+      player.request(nina)
       player.confirmPlaying()
       player.reportReconnecting()
 
       expect(player.state.status).toBe('reconnecting')
-      expect(player.state.radio).toEqual(fip)
+      expect(player.state.radio).toEqual(nina)
     })
 
-    it('stays reconnecting while an attempt buffers', () => {
-      player.request(fip)
+    it('should stay reconnecting when an attempt buffers', () => {
+      player.request(nina)
       player.confirmPlaying()
       player.reportReconnecting()
       player.reportLoading()
 
-      // The attempt buffering is part of the reconnection: showing an initial
-      // load would erase the distinction.
+      // La tentative qui charge fait partie de la reconnexion : montrer un
+      // premier chargement effacerait la distinction.
       expect(player.state.status).toBe('reconnecting')
     })
 
-    it('goes back to playing once an attempt succeeds', () => {
-      player.request(fip)
+    it('should go back to playing when an attempt succeeds', () => {
+      player.request(nina)
       player.reportReconnecting()
       player.confirmPlaying()
 
       expect(player.state.status).toBe('playing')
     })
 
-    it('reports an interruption only the listener can undo, keeping the radio', () => {
-      player.request(fip)
+    it('should report interrupted, keeping the radio, when only the listener can resume', () => {
+      player.request(nina)
       player.reportReconnecting()
       player.reportInterrupted()
 
       expect(player.state.status).toBe('interrupted')
-      expect(player.state.radio).toEqual(fip)
+      expect(player.state.radio).toEqual(nina)
     })
   })
 
   describe('whether the radio has played', () => {
-    it('has not until the stream actually plays', () => {
-      player.request(fip)
+    it('should not count as played until the stream actually plays', () => {
+      player.request(nina)
       player.reportReconnecting()
       expect(player.state.played).toBe(false)
 
@@ -171,63 +163,63 @@ describe('player state', () => {
       expect(player.state.played).toBe(true)
     })
 
-    it('still has when the same radio is resumed or relaunched', () => {
-      player.request(fip)
+    it('should still count as played when the same radio is resumed or relaunched', () => {
+      player.request(nina)
       player.confirmPlaying()
       player.pause()
-      player.request(fip)
+      player.request(nina)
 
       expect(player.state.played).toBe(true)
     })
 
-    it('has not once another radio is chosen, or after a stop', () => {
-      player.request(fip)
+    it('should no longer count as played when another radio is chosen or after a stop', () => {
+      player.request(nina)
       player.confirmPlaying()
-      player.request(panik)
+      player.request(other)
       expect(player.state.played).toBe(false)
 
       player.confirmPlaying()
       player.stop()
-      player.request(panik)
+      player.request(other)
       expect(player.state.played).toBe(false)
     })
   })
 
   describe('only one stream at a time', () => {
-    it('replaces the current radio when another is requested', () => {
-      player.request(fip)
+    it('should replace the current radio when another is requested', () => {
+      player.request(nina)
       player.confirmPlaying()
-      expect(player.state.radio).toEqual(fip)
+      expect(player.state.radio).toEqual(nina)
 
-      player.request(panik)
+      player.request(other)
 
-      // There is only one radio in the state: the first is no longer playable,
-      // hence no longer audible. Uniqueness is structural, not conventional.
-      expect(player.state.radio).toEqual(panik)
+      // L'état ne porte qu'une radio : la première n'est plus jouable, donc plus
+      // audible. L'unicité est structurelle, pas une convention.
+      expect(player.state.radio).toEqual(other)
       expect(player.state.status).toBe('loading')
     })
 
-    it('goes back to loading even when the same radio is relaunched', () => {
-      player.request(fip)
+    it('should go back to loading when the same radio is relaunched', () => {
+      player.request(nina)
       player.confirmPlaying()
-      player.request(fip)
+      player.request(nina)
 
       expect(player.state.status).toBe('loading')
     })
 
-    it('leaves the error state as soon as another radio is started', () => {
-      player.request(fip)
+    it('should leave the error state when another radio is started', () => {
+      player.request(nina)
       player.reportError()
-      player.request(panik)
+      player.request(other)
 
       expect(player.state.status).toBe('loading')
-      expect(player.state.radio).toEqual(panik)
+      expect(player.state.radio).toEqual(other)
     })
   })
 
   describe('events lagging behind a stop', () => {
-    it('ignores a playback confirmation arriving after a stop', () => {
-      player.request(fip)
+    it('should ignore a playback confirmation when it arrives after a stop', () => {
+      player.request(nina)
       player.stop()
       player.confirmPlaying()
 
@@ -235,24 +227,24 @@ describe('player state', () => {
       expect(player.state.radio).toBeNull()
     })
 
-    it('ignores an error arriving after a stop', () => {
-      player.request(fip)
+    it('should ignore an error when it arrives after a stop', () => {
+      player.request(nina)
       player.stop()
       player.reportError()
 
       expect(player.state.status).toBe('stopped')
     })
 
-    it('ignores an offline report arriving after a stop', () => {
-      player.request(fip)
+    it('should ignore an offline report when it arrives after a stop', () => {
+      player.request(nina)
       player.stop()
       player.reportOffline()
 
       expect(player.state.status).toBe('stopped')
     })
 
-    it('ignores a reconnection or an interruption arriving after a stop', () => {
-      player.request(fip)
+    it('should ignore a reconnection or an interruption when it arrives after a stop', () => {
+      player.request(nina)
       player.stop()
       player.reportReconnecting()
       player.reportInterrupted()
@@ -260,8 +252,8 @@ describe('player state', () => {
       expect(player.state.status).toBe('stopped')
     })
 
-    it('ignores a loading report arriving after a stop', () => {
-      player.request(fip)
+    it('should ignore a loading report when it arrives after a stop', () => {
+      player.request(nina)
       player.stop()
       player.reportLoading()
 
@@ -277,28 +269,28 @@ describe('player state', () => {
     }
 
     for (const [status, fail] of Object.entries(failures)) {
-      it(`keeps the ${status} message whatever the element reports afterwards`, () => {
-        player.request(fip)
+      it(`should keep the ${status} message when the element reports anything afterwards`, () => {
+        player.request(nina)
         fail(player)
-        // As when the system resumes a released element: only the listener
-        // leaves a failure, by starting a radio.
+        // Comme quand le système reprend un élément relâché : seul l'auditeur
+        // sort d'une panne, en lançant une radio.
         player.reportLoading()
         player.confirmPlaying()
         player.reportReconnecting()
 
         expect(player.state.status).toBe(status)
-        expect(player.state.radio).toEqual(fip)
+        expect(player.state.radio).toEqual(nina)
       })
     }
   })
 
-  it('never starts on its own', () => {
-    // "No automatic playback" requirement: a fresh player, including one
-    // rebuilt from stored state, is never playing.
+  it('should never be playing when freshly created', () => {
+    // Exigence « pas de lecture automatique » : un lecteur neuf, y compris
+    // reconstruit depuis un état gardé, ne joue jamais.
     expect(createPlayer().state.status).toBe('stopped')
   })
 
-  it('counts only a listening in progress as listening', () => {
+  it('should count as listening only when a listening is in progress', () => {
     expect(['loading', 'playing', 'reconnecting'].every((s) => isListening(s as never))).toBe(true)
     for (const status of ['stopped', 'paused', 'error', 'offline', 'interrupted'] as const) {
       expect(isListening(status), status).toBe(false)
