@@ -1,0 +1,53 @@
+---
+import { config } from '~/shared/site/config.ts'
+import { robotsMeta, isProduction } from '~/shared/site/indexing.ts'
+import { DESCRIPTION, FACEBOOK_APP_ID, SITE, STATCOUNTER, TITLE } from '~/shared/site/site.ts'
+import '../styles/global.css'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const { title = TITLE, description = DESCRIPTION } = Astro.props
+// Hors production, chaque page se ferme aux moteurs (website#76) : voir indexing.ts.
+const robots = robotsMeta(config.siteEnv)
+// Le staging ne compte pas dans les statistiques de la prod.
+const statcounter = isProduction(config.siteEnv)
+const image = new URL('/preview.png', SITE).href
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {robots && <meta name="robots" content={robots} />}
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta property="fb:app_id" content={FACEBOOK_APP_ID} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/x-icon" href="/favicon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  </head>
+  <body>
+    <slot />
+    <script>
+      import { registerServiceWorker } from '~/features/install/register.client.ts'
+      registerServiceWorker()
+    </script>
+    {statcounter && (
+      <>
+        <script
+          is:inline
+          set:html={`var sc_project=${STATCOUNTER.project};var sc_invisible=1;var sc_security="${STATCOUNTER.security}";`}
+        />
+        <script is:inline async src="https://www.statcounter.com/counter/counter.js" />
+      </>
+    )}
+  </body>
+</html>

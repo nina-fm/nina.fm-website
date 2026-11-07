@@ -1,0 +1,160 @@
+name: Deploy Staging
+
+# Déploie le site Astro (`astro/`) sur https://staging.nina.fm, à chaque push sur `main`
+# qui le touche (website#76). La prod n'est pas concernée : elle reste à `deploy.yml`.
+#
+# Pas d'image ni de release : le site est construit sur le runner, copié sur le serveur
+# dans /var/nina/website-staging/releases/<sha>, puis servi par un conteneur nginx:alpine
+# (astro/deploy/docker-compose.yml) une fois le lien `current` basculé.
+#
+# Un staging n'est jamais indexable : le build est vérifié avant la copie
+# (astro-validate.yml), et le site en ligne après, en-tête X-Robots-Tag compris.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'astro/**'
+      - '.github/workflows/astro-validate.yml'
+      - '.github/workflows/deploy-staging.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Deux déploiements ne se croisent jamais sur le serveur ; le suivant attend.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  STAGING_URL: https://staging.nina.fm
+
+jobs:
+  validate:
+    uses: ./.github/workflows/astro-validate.yml
+    with:
+      upload-dist: true
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout de la config de déploiement
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            astro/deploy
+            astro/scripts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Récupérer dist/
+        uses: actions/download-artifact@v8
+        with:
+          name: astro-dist
+          path: dist
+
+      - name: Empaqueter le site
+        run: |
+          test -f dist/index.html
+          tar -czf site.tgz -C dist .
+          echo "SITE_SHA256=$(sha256sum site.tgz | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "INDEX_SHA256=$(sha256sum dist/index.html | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      # Compose et conf nginx du commit déployé, transmis au serveur avec leur empreinte.
+      # Délimiteur aléatoire : une ligne d'un fichier ne peut pas clore la valeur.
+      - name: Lire la config de déploiement
+        id: config
+        run: |
+          for f in docker-compose.yml nginx.conf; do
+            key=$(echo "$f" | tr -c 'a-z0-9\n' '_')
+            delim="EOF_$(openssl rand -hex 16)"
+            { echo "${key}<<$delim"; cat "astro/deploy/$f"; echo "$delim"; } >> "$GITHUB_OUTPUT"
+            echo "${key}sha256=$(sha256sum "astro/deploy/$f" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Copier le site sur le serveur
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: site.tgz
+          target: /var/nina/website-staging/incoming
+
+      - name: Basculer le staging
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          # Unique par run : redéployer le même commit ne réécrit pas la version servie.
+          RELEASE: ${{ github.sha }}-${{ github.run_id }}
+          SITE_SHA256: ${{ env.SITE_SHA256 }}
+          COMPOSE: ${{ steps.config.outputs.docker_compose_yml }}
+          COMPOSE_SHA256: ${{ steps.config.outputs.docker_compose_ymlsha256 }}
+          NGINX_CONF: ${{ steps.config.outputs.nginx_conf }}
+          NGINX_CONF_SHA256: ${{ steps.config.outputs.nginx_confsha256 }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 5m
+          envs: RELEASE,SITE_SHA256,COMPOSE,COMPOSE_SHA256,NGINX_CONF,NGINX_CONF_SHA256
+          script: |
+            set -eu
+            BASE=/var/nina/website-staging
+            mkdir -p "$BASE/releases" "$BASE/deploy"
+            cd "$BASE"
+
+            echo "$SITE_SHA256  incoming/site.tgz" | sha256sum -c || { echo "❌ Site corrompu en transit"; exit 1; }
+            mkdir "releases/$RELEASE"
+            tar -xzf incoming/site.tgz -C "releases/$RELEASE"
+            rm -f incoming/site.tgz
+            test -f "releases/$RELEASE/index.html"
+
+            printf '%s\n' "$COMPOSE" > deploy/docker-compose.yml
+            echo "$COMPOSE_SHA256  deploy/docker-compose.yml" | sha256sum -c || { echo "❌ Compose corrompu en transit"; exit 1; }
+            printf '%s\n' "$NGINX_CONF" > deploy/nginx.conf
+            echo "$NGINX_CONF_SHA256  deploy/nginx.conf" | sha256sum -c || { echo "❌ Conf nginx corrompue en transit"; exit 1; }
+
+            # Lien relatif, résolu dans le conteneur sous /srv ; mv -T le remplace d'un coup.
+            ln -sfn "releases/$RELEASE" current.tmp
+            mv -Tf current.tmp current
+
+            cd deploy
+            docker compose up -d
+            # La conf est montée en fichier : la relire sans recréer le conteneur.
+            docker exec nina-website-staging nginx -t
+            docker exec nina-website-staging nginx -s reload
+
+            echo "🔍 Health check..."
+            for i in $(seq 1 12); do
+              if curl -sf -o /dev/null http://127.0.0.1:3001/; then
+                echo "✅ Staging servi : $RELEASE"
+                break
+              fi
+              if [ "$i" -eq 12 ]; then
+                echo "❌ Staging non joignable après 12 tentatives"
+                docker logs nina-website-staging --tail 50
+                exit 1
+              fi
+              echo "⏳ Tentative $i/12..."
+              sleep 5
+            done
+
+            # Garder la version servie et la précédente.
+            cd "$BASE/releases"
+            ls -1t | tail -n +3 | xargs -r rm -rf
+            docker stats --no-stream --format 'Mémoire : {{.MemUsage}}' nina-website-staging
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: astro/.nvmrc
+
+      # Contrôle de bout en bout, à travers le reverse proxy : la page servie est celle du
+      # commit, et le site en ligne reste fermé aux moteurs.
+      - name: Vérifier le staging en ligne
+        run: |
+          served=$(curl -sf "$STAGING_URL/" | sha256sum | cut -d' ' -f1)
+          [ "$served" = "$INDEX_SHA256" ] || { echo "❌ $STAGING_URL ne sert pas ce commit"; exit 1; }
+          node astro/scripts/check-noindex.ts "$STAGING_URL"
