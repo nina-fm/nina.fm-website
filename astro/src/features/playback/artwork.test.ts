@@ -56,3 +56,15 @@ describe('getArtwork', () => {
     result.forEach((entry) => expect(entry.src).toBe('https://nina.fm/api/cover/covers/mix.jpg'))
   })
 })
+
+describe('getArtwork type', () => {
+  it('should read the extension before the query string', () => {
+    const result = getArtwork('https://api.nina.fm/covers/mix.webp?v=2', ORIGIN)
+    result.forEach((entry) => expect(entry.type).toBe('image/webp'))
+  })
+
+  it('should read an upper-case extension', () => {
+    const result = getArtwork('https://api.nina.fm/covers/MIX.JPEG', ORIGIN)
+    result.forEach((entry) => expect(entry.type).toBe('image/jpeg'))
+  })
+})

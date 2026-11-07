@@ -18,4 +18,13 @@ Placer chaque morceau de code que la tâche ajoute ou change :
 - ce qui touche au navigateur (audio, SSE, `localStorage`…) reste côté client :
   nommer la garde prévue (`import.meta.client`, hook client, plugin `.client.ts`).
 
+Pour le site Astro (`astro/`, epic #75), les destinations suivent `astro/CLAUDE.md` :
+
+- une règle pure va dans `astro/src/features/<domaine>/nom.ts` (ou `src/shared/`
+  si plusieurs domaines s'en servent), avec son test co-localisé ;
+- l'état réactif va dans un `nom.store.ts`, un effet navigateur dans un
+  `nom.client.ts`, le rendu dans un `Nom.tsx` sans hook ;
+- ce qui touche au navigateur ne s'exécute qu'après le montage d'un îlot
+  (`onMount`), jamais au prérendu.
+
 Section du plan : `#### Où va le code`, tableau `| Code | Destination |`.

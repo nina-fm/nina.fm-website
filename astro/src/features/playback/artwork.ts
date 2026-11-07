@@ -1,7 +1,26 @@
-import mime from 'mime'
-
 export const DEFAULT_ARTWORK_FILENAME = '/artwork.png'
 export const DEFAULT_ARTWORK_SIZE = '1024x1024'
+/**
+ * Types des images que l'API sert, d'après l'extension. Une table plutôt que la
+ * bibliothèque `mime`, dont la base entière pesait 10 ko gzip dans l'îlot du
+ * lecteur (website#77).
+ */
+const IMAGE_TYPES: Record<string, string> = {
+  avif: 'image/avif',
+  gif: 'image/gif',
+  jpeg: 'image/jpeg',
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  svg: 'image/svg+xml',
+  webp: 'image/webp',
+}
+
+/** Type d'une image d'après l'extension de son chemin, `image/png` à défaut. */
+function imageType(src: string): string {
+  const extension = /\.(\w+)$/.exec(src.split(/[?#]/)[0] ?? '')?.[1]?.toLowerCase()
+  return (extension && IMAGE_TYPES[extension]) ?? 'image/png'
+}
+
 export const COVER_ARTWORK_SIZES = ['96x96', '128x128', '192x192', '256x256', '384x384', '512x512']
 
 /**
@@ -18,7 +37,7 @@ export function getArtwork(filepath: unknown, origin: string): MediaImage[] {
   const raw = typeof filepath === 'string' && filepath ? filepath : defaultArtwork
   const src = raw.startsWith('/') ? `${origin}${raw}` : raw
   const isDefault = src === defaultArtwork
-  const type = mime.getType(src) || 'image/png'
+  const type = imageType(src)
 
   if (isDefault) {
     return [{ src, sizes: DEFAULT_ARTWORK_SIZE, type }]

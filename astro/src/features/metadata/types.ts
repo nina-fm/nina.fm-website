@@ -11,7 +11,7 @@ export interface ParsedTrack {
   startAt: string | null
 }
 
-/** Mixtape envoyée par l'événement SSE `metadata`. */
+/** Mixtape envoyée par le flux SSE `/metadata` (messages sans nom d'événement). */
 export interface MixtapeMetadataDto {
   id: string
   name: string
