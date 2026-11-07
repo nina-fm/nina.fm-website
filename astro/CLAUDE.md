@@ -29,6 +29,13 @@ tout autre build pose `noindex, nofollow` sur chaque page, ferme `robots.txt` et
 statcounter. `pnpm check:noindex` le vérifie sur `dist/` et en ligne (`deploy-staging.yml`),
 et le conteneur comme le reverse proxy posent `X-Robots-Tag`.
 
+## Lecteur
+
+Un seul lecteur par page : l'état de `features/playback/` est de module, partagé par les
+îlots et gardé entre les pages par l'îlot persistant (`BaseLayout.astro`) ;
+`install/same-build.client.ts` recharge la page quand un nouveau build changerait de module.
+`play()` s'appelle dans la tâche même du geste (iOS), jamais depuis un effet.
+
 ## Dépendances
 
 - `pnpm.overrides` épingle `@emnapi/runtime` en 1.11 : la 2.0 bêta, tirée par la liaison

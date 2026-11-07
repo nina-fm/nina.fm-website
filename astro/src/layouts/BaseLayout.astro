@@ -1,4 +1,6 @@
 ---
+import { ClientRouter } from 'astro:transitions'
+import AudioPlayer from '~/features/playback/AudioPlayer.tsx'
 import { config } from '~/shared/site/config.ts'
 import { robotsMeta, isProduction } from '~/shared/site/indexing.ts'
 import { DESCRIPTION, FACEBOOK_APP_ID, SITE, STATCOUNTER, TITLE } from '~/shared/site/site.ts'
@@ -33,11 +35,20 @@ const image = new URL('/preview.png', SITE).href
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/x-icon" href="/favicon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    {/* Navigation sans recharger le document, donc sans couper le son. */}
+    <ClientRouter />
   </head>
   <body>
     <slot />
+    {/* Le lecteur, hors des pages et persistant : un seul élément audio dans tout le
+        site, et l'écoute qui continue d'une page à l'autre. `transition:persist-props` :
+        Astro ne lui redonne jamais de propriétés, qui le remonteraient. */}
+    <AudioPlayer client:load transition:persist="player" transition:persist-props />
+    {/* Scripts de module : exécutés une fois par document, pas à chaque navigation. */}
     <script>
       import { registerServiceWorker } from '~/features/install/register.client.ts'
+      import { reloadOnNewBuild } from '~/features/install/same-build.client.ts'
+      reloadOnNewBuild()
       registerServiceWorker()
     </script>
     {statcounter && (

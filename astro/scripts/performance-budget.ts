@@ -21,11 +21,15 @@ const DIST = join(ROOT, 'dist')
  * worker, émis à la racine, n'en fait pas partie. `page` : le HTML d'une page.
  *
  * Posés le 2026-11-07 sur la page provisoire du socle (website#76) : aucun fichier JS
- * (Astro inline le script du service worker), 0,7 ko de HTML. Ils
- * seront relevés sciemment, et datés ici, avec le lecteur (#77) et la coquille (#78).
+ * (Astro inline le script du service worker), 0,7 ko de HTML.
+ *
+ * `js` relevé le 2026-11-07 avec le lecteur (website#77) : 19,3 ko, dont le runtime
+ * Solid 7,4, le routeur client 5,7 (qui garde le son entre les pages), le lecteur et
+ * les flux SSE 4,0, les deux îlots 2,3 ; `mime` retiré au passage (−11 ko). Marge
+ * d'environ 1 ko. La coquille (#78) le relèvera de nouveau, sciemment, et datera ici.
  */
 const BUDGET = {
-  js: 5 * 1024,
+  js: 20 * 1024,
   page: 5 * 1024,
 }
 

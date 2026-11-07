@@ -19,53 +19,47 @@ const AUDIO =
       )
     : null
 
-let canplay = false
-export function forceDetectAutoplay(timeout?: number): Promise<boolean> {
-  return new Promise(function (r) {
-    const video = document.createElement('video')
+/**
+ * L'autoplay est-il permis sur cette page ? Essaie de jouer, sans geste, un MP3
+ * minuscule dans une vidéo `playsInline`, avec `timeout` ms pour répondre.
+ *
+ * Détecté une seule fois par document : chaque appel reçoit la même promesse, que
+ * la réponse soit oui ou non. Le site Nuxt testait deux fois (`stores/audio.ts`,
+ * `stores/browser.ts`) et retestait chaque « non » (website#77).
+ */
+let detection: Promise<boolean> | null = null
+
+export function detectAutoplay(timeout = 300): Promise<boolean> {
+  detection ??= probe(timeout)
+  return detection
+}
+
+function probe(timeout: number): Promise<boolean> {
+  return new Promise((resolve) => {
     if (!AUDIO) {
-      r(false)
+      resolve(false)
       return
     }
+    const video = document.createElement('video')
     video.src = URL.createObjectURL(AUDIO)
     video.playsInline = true
-    const ret = video.play()
-    let timer: ReturnType<typeof setTimeout> | undefined
-
-    const end = function (can: boolean) {
+    const timer = setTimeout(() => end(false), timeout)
+    const end = (can: boolean) => {
       clearTimeout(timer)
-      canplay = can
       video.pause()
       URL.revokeObjectURL(video.src)
       video.src = ''
       video.srcObject = null
-      if (video.remove) video.remove()
-      r(can)
+      video.remove()
+      resolve(can)
     }
 
-    if (ret) {
-      ret
-        .then(function () {
-          end(true)
-        })
-        .catch(function () {
-          end(false)
-        })
-      timer = setTimeout(
-        function () {
-          end(false)
-        },
-        timeout == null ? 300 : timeout,
-      )
-    } else {
-      end(true)
-    }
+    // Un navigateur ancien rend `undefined` : il joue sans demander.
+    const played = video.play() as Promise<void> | undefined
+    if (!played) return end(true)
+    played.then(
+      () => end(true),
+      () => end(false),
+    )
   })
 }
-
-export function detectAutoplay(timeout?: number): Promise<boolean> {
-  if (canplay) return Promise.resolve(canplay)
-  return forceDetectAutoplay(timeout)
-}
-
-export default detectAutoplay
