@@ -107,6 +107,15 @@
       background-color: transparent;
     }
   }
+  .bg-primary\/20 {
+    background-color: hsl(var(--primary) / 0.2);
+  }
+  .text-foreground\/50 {
+    color: hsl(var(--foreground) / 0.5);
+  }
+  .text-foreground\/70 {
+    color: hsl(var(--foreground) / 0.7);
+  }
   .text-foreground\/80,
   .theme-vinyl .\[\.theme-vinyl_\&\]\:text-foreground\/80 {
     color: hsl(var(--foreground) / 0.8);
@@ -124,5 +133,15 @@
     .hover\:bg-primary\/90:hover {
       background-color: hsl(var(--primary) / 0.9);
     }
+  }
+}
+
+/*
+ * Les dégradés de Tailwind 4 s'interpolent `in oklab`, syntaxe que Firefox ne lit qu'à
+ * partir de la 127 : sans elle, le fondu du bas de la tracklist disparaîtrait.
+ */
+@supports not (background-image: linear-gradient(in oklab, red, red)) {
+  .after\:bg-gradient-to-t::after {
+    --tw-gradient-position: to top;
   }
 }

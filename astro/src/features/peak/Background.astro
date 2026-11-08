@@ -1,0 +1,18 @@
+---
+import maskNight from './images/mask-night.png'
+import mask from './images/mask.png'
+
+/**
+ * Le fond de Peak (`themes/peak/components/Background.vue`) : la photo, animée pendant
+ * l'écoute, de jour ou de nuit (`peak.css`), et le premier plan détouré. Statique : les
+ * classes du `<body>` suffisent. Le premier plan de l'autre moment de la journée,
+ * masqué et différé, ne se télécharge pas.
+ */
+const maskClass = 'absolute bottom-0 left-0 max-h-[65%] max-w-[105%]'
+---
+
+<div class="relative h-full w-full overflow-hidden">
+  <div class="peak-background h-full w-full bg-cover bg-[left_15%_center] bg-no-repeat md:bg-left"></div>
+  <img src={mask.src} alt="" loading="lazy" class={`${maskClass} dark:hidden`} />
+  <img src={maskNight.src} alt="" loading="lazy" class={`${maskClass} hidden dark:block`} />
+</div>

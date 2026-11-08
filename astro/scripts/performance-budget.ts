@@ -34,9 +34,13 @@ const DIST = join(ROOT, 'dist')
  * au profit de ses seuls tracés (−4,6 ko). `page` 7,4 ko : About rendu au build, sans
  * JavaScript, et le script de démarrage du thème. Marge d'environ 1 ko chacun ; la scène
  * Peak (seconde moitié) les relèvera de nouveau.
+ *
+ * `js` relevé le 2026-11-08 avec la scène Peak (website#78, seconde moitié) : 34,6 ko,
+ * l'îlot de la scène ajoutant 4,1 ko et la page de recette du lecteur en retirant 1,2.
+ * Fond, crédits et images restent hors JavaScript (CSS d'après les classes du `<body>`).
  */
 const BUDGET = {
-  js: 33 * 1024,
+  js: 36 * 1024,
   page: 8.5 * 1024,
 }
 

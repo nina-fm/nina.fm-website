@@ -5,6 +5,8 @@ interface Props {
   children: JSX.Element
   /** `end` : aligné sur le bord droit du déclencheur, pour ceux du bord de l'écran. */
   align?: 'center' | 'end'
+  /** Taille du texte, `text-xs` par défaut. */
+  size?: string
 }
 
 /**
@@ -19,8 +21,12 @@ export default function Tooltip(props: Props) {
       {props.children}
       <span
         role="tooltip"
-        class="bg-popover text-popover-foreground pointer-events-none absolute bottom-full z-50 mb-[9px] translate-y-2 scale-95 rounded-md px-3 py-1.5 text-xs whitespace-nowrap opacity-0 transition-[opacity,scale,translate] duration-150 group-hover/tooltip:translate-y-0 group-hover/tooltip:scale-100 group-hover/tooltip:opacity-100 group-hover/tooltip:delay-700"
-        classList={{ 'right-0 origin-bottom-right': end(), 'left-1/2 -translate-x-1/2 origin-bottom': !end() }}
+        class="bg-popover text-popover-foreground pointer-events-none absolute bottom-full z-50 mb-[9px] translate-y-2 scale-95 rounded-md px-3 py-1.5 whitespace-nowrap opacity-0 transition-[opacity,scale,translate] duration-150 group-hover/tooltip:translate-y-0 group-hover/tooltip:scale-100 group-hover/tooltip:opacity-100 group-hover/tooltip:delay-700"
+        classList={{
+          'right-0 origin-bottom-right': end(),
+          'left-1/2 -translate-x-1/2 origin-bottom': !end(),
+          [props.size ?? 'text-xs']: true,
+        }}
       >
         {props.content}
         <svg

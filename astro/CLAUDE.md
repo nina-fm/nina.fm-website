@@ -41,6 +41,10 @@ Pas de `tailwind-merge` : chaque usage d'un bouton écrit ses classes fusionnée
 (`shared/ui/button.ts`). Une couleur translucide nouvelle reçoit son repli sans
 `color-mix` dans `styles/global.css`.
 
+Une image qui dépend du jour ou de l'écoute se choisit en CSS d'après les classes du
+`<body>` (`peak/images.ts`, `peak.css`), jamais au build ni dans un îlot : seule celle
+qui s'affiche se télécharge.
+
 ## Lecteur
 
 Un seul lecteur par page : l'état de `features/playback/` est de module, partagé par les

@@ -1,18 +1,27 @@
 ---
 import About from '~/features/content/About.astro'
+import Background from '~/features/peak/Background.astro'
 import ContentPanel from '~/features/peak/ContentPanel.tsx'
-import PlaybackState from '~/features/playback/PlaybackState.tsx'
+import Credits from '~/features/peak/Credits.astro'
+import Scene from '~/features/peak/Scene.tsx'
+import { PEAK_IMAGE_VARIABLES } from '~/features/peak/images.ts'
 import Controls from '~/features/shell/Controls.tsx'
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import '~/features/peak/peak.css'
+
+const images = Object.entries(PEAK_IMAGE_VARIABLES)
+  .map(([name, value]) => `${name}: ${value}`)
+  .join('; ')
 ---
 
 <BaseLayout>
-  {/* Le cadre de Peak (`themes/peak/theme.vue`, `layouts/default.vue`). La scène arrive
-      dans la seconde moitié de website#78 ; d'ici là, l'état brut du lecteur. */}
-  <main class="theme-peak h-full">
+  {/* Le cadre de Peak (`themes/peak/theme.vue`, `layouts/default.vue`) et sa scène. Les
+      crédits précèdent l'îlot : le panneau des détails doit passer devant eux. */}
+  <main class="theme-peak h-full" style={images}>
     <div class="absolute inset-4 overflow-hidden rounded md:inset-5">
-      <PlaybackState client:load />
+      <Background />
+      <Credits />
+      <Scene client:load />
       <ContentPanel client:load>
         <About />
       </ContentPanel>
