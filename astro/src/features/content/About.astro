@@ -1,0 +1,73 @@
+---
+import Card from '~/shared/ui/Card.astro'
+import { BUTTON_BASE, buttonClass } from '~/shared/ui/button.ts'
+import SocialIcon from './SocialIcon.astro'
+
+/**
+ * Le contenu du panneau (`app/components/contents/About.vue`), statique : aucun état,
+ * donc aucun JavaScript. Les classes des boutons et des cartes sont celles que la
+ * prod obtenait par-dessus shadcn (`.social-button`, `.block-card`).
+ */
+const round = `${BUTTON_BASE} border shadow-sm transition-colors rounded-full border-accent-foreground bg-transparent text-accent-foreground hover:bg-primary/10 hover:text-accent-foreground [&_svg]:size-6 [&_svg.size-5]:size-5`
+const social = `${round} size-10 text-xl`
+const socialText = `${round} h-10 pr-5 pl-3 text-base`
+const block =
+  'w-full rounded-md border-0 bg-transparent p-2 text-card-foreground shadow-none md:bg-background/90 md:p-6'
+const guide = buttonClass('default').replace('rounded-md', 'rounded-full')
+const external = { target: '_blank', rel: 'noopener noreferrer' }
+---
+
+<div class="flex flex-col items-center gap-2">
+  <div class="font-condensed p-0 text-center text-2xl text-primary md:p-5 [.theme-peak_&]:font-bold">
+    PROJET RADIOPHONIQUE À LONGUE PORTÉE
+  </div>
+  <div class="mb-5 flex gap-2">
+    <a href="https://www.mixcloud.com/Nina_fm/" aria-label="Nina.fm sur Mixcloud" class={social} {...external}>
+      <SocialIcon name="mixcloud" />
+    </a>
+    <a href="mailto:infos@nina.fm" aria-label="Écrire à Nina.fm" class={social} {...external}>
+      <SocialIcon name="mail" />
+    </a>
+    <a href="https://www.facebook.com/nina.webradio/" aria-label="Nina.fm sur Facebook" class={social} {...external}>
+      <SocialIcon name="facebook" />
+    </a>
+    <a href="https://chat.whatsapp.com/EQSRbq6bdneCZSlED4kKZ0" class={socialText} {...external}>
+      <SocialIcon name="whatsapp" />
+      Les étoiles de Nina
+    </a>
+  </div>
+  <Card class={block}>
+    <blockquote class="px-0 text-center">
+      <p>
+        Nina.fm c'est une webradio artisanale et associative.
+        <br class="hidden xl:block" />
+        C'est bientôt 10 ans de pépites musicales diffusées gratuitement, en continu et sans publicité. Ce sont des DJs
+        qui partagent leurs mixtapes.
+        <br class="hidden xl:block" />
+        Enfin Nina.fm c'est nous, une bande de passionnés, mais avant-tout c'est vous, car sans auditeurs, pas de
+        radio&nbsp;!
+      </p>
+    </blockquote>
+  </Card>
+  <Card class={`${block} flex flex-col items-stretch gap-2 text-center md:items-center`}>
+    <h2 class="font-condensed m-0 text-2xl text-primary [.theme-peak_&]:font-bold">Ninaversaire !</h2>
+    <p class="[.theme-vinyl_&]:text-foreground/80">
+      Cette année, Nina.fm fête ses 10 ans ! Pour l'occasion, nous avons prévu plein de surprises ! Restez à l'écoute et
+      faite briller votre étoile dans le ciel de Nina.fm ! Vous pouvez aussi rejoindre notre groupe WhatsApp
+      "Les&nbsp;étoiles&nbsp;de&nbsp;Nina" pour tout savoir !
+    </p>
+  </Card>
+  <Card class={`${block} flex flex-col items-stretch gap-2 text-center md:items-center`}>
+    <h2 class="font-condensed m-0 text-2xl text-primary [.theme-peak_&]:font-bold">Devenez DJ !</h2>
+    <p class="[.theme-vinyl_&]:text-foreground/80">
+      Vous avez une mixtape à partager ? N'hésitez pas à nous la transmettre, nous pouvons l'intègrer à la programmation
+      ! Dès que votre mixtape sera diffusée, votre nom de DJ apparaitra !
+    </p>
+    <a
+      class={`${guide} mt-2`}
+      href="mailto:infos@nina.fm?subject=Demande%20tuto%20mixtape&body=Dis%20Nina%2C%20comment%20on%20fait%20une%20mixtape%3F"
+    >
+      ON VOUS GUIDE
+    </a>
+  </Card>
+</div>

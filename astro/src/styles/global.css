@@ -1,12 +1,14 @@
 /*
  * Tailwind 4, configuré en CSS. Reprend tailwind.config.js de la prod Nuxt (Tailwind 3) :
  * tokens HSL des thèmes, rayons, échelle de tailles de texte remplacée en entier,
- * animation spin-slow, mode sombre par la classe `dark`.
+ * animation spin-slow, mode sombre par la classe `dark`. Les tokens de chaque thème sont
+ * dans sa feuille (`features/peak/peak.css`), importée par sa page.
  */
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+/* `.dark` est sur le `<body>`, qui porte aussi `data-theme` et que ses propres règles visent. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -71,5 +73,52 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+/* Comme la prod : la page tient dans la fenêtre, la scène est en position absolue. */
+@layer base {
+  html,
+  body {
+    height: 100vh;
+  }
+}
+
+/*
+ * Sans `color-mix` (iOS 15, Edge 109 : 3 à 6,6 % des visites relevées le 2026-11-07),
+ * Tailwind 4 retombe sur la couleur opaque : le voile du calque cacherait la scène. Les
+ * tokens étant des triplets HSL, chaque couleur translucide employée retrouve ici son
+ * alpha. Hors calque, pour passer devant les utilitaires. Firefox 115 a `color-mix`, et
+ * Tailwind initialise lui-même ses `--tw-*` là où `@property` manque.
+ */
+@supports not (color: color-mix(in lab, red, red)) {
+  .bg-background\/50 {
+    background-color: hsl(var(--background) / 0.5);
+  }
+  .bg-background\/90 {
+    background-color: hsl(var(--background) / 0.9);
+  }
+  @media (width >= 48rem) {
+    .md\:bg-background\/90 {
+      background-color: hsl(var(--background) / 0.9);
+    }
+  }
+  .text-foreground\/80,
+  .theme-vinyl .\[\.theme-vinyl_\&\]\:text-foreground\/80 {
+    color: hsl(var(--foreground) / 0.8);
+  }
+  @media (hover: hover) {
+    .hover\:bg-background\/40:hover {
+      background-color: hsl(var(--background) / 0.4);
+    }
+    .hover\:bg-foreground\/10:hover {
+      background-color: hsl(var(--foreground) / 0.1);
+    }
+    .hover\:bg-primary\/10:hover {
+      background-color: hsl(var(--primary) / 0.1);
+    }
+    .hover\:bg-primary\/90:hover {
+      background-color: hsl(var(--primary) / 0.9);
+    }
   }
 }

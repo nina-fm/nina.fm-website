@@ -1,11 +1,22 @@
 ---
-import BaseLayout from '~/layouts/BaseLayout.astro'
+import About from '~/features/content/About.astro'
+import ContentPanel from '~/features/peak/ContentPanel.tsx'
 import PlaybackState from '~/features/playback/PlaybackState.tsx'
+import Controls from '~/features/shell/Controls.tsx'
+import BaseLayout from '~/layouts/BaseLayout.astro'
+import '~/features/peak/peak.css'
 ---
 
-<!-- Page brute de recette (website#77) : la coquille et le thème Peak arrivent avec website#78. -->
 <BaseLayout>
-  <main class="bg-background text-foreground min-h-screen">
-    <PlaybackState client:load />
+  {/* Le cadre de Peak (`themes/peak/theme.vue`, `layouts/default.vue`). La scène arrive
+      dans la seconde moitié de website#78 ; d'ici là, l'état brut du lecteur. */}
+  <main class="theme-peak h-full">
+    <div class="absolute inset-4 overflow-hidden rounded md:inset-5">
+      <PlaybackState client:load />
+      <ContentPanel client:load>
+        <About />
+      </ContentPanel>
+      <Controls client:load />
+    </div>
   </main>
 </BaseLayout>

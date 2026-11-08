@@ -4,6 +4,7 @@ import { detectAutoplay } from '~/shared/browser/detectAutoplay.client.ts'
 import { keepScreenOn, lockPortrait } from '~/shared/browser/screen.client.ts'
 import { attachElement, detachElement, play } from './controls.client.ts'
 import { autoplay } from './autoplay.store.ts'
+import { followMute } from './mute.store.ts'
 import { NINA } from './stream.ts'
 
 /**
@@ -19,6 +20,7 @@ export function useAudioPlayer(): { parts: { audio?: HTMLAudioElement } } {
   const parts: { audio?: HTMLAudioElement } = {}
   onMount(() => {
     if (parts.audio) attachElement(parts.audio)
+    const stopMute = parts.audio ? followMute(parts.audio) : () => undefined
     const closeFeeds = followOnAir()
     const releaseScreen = keepScreenOn()
     lockPortrait()
@@ -29,6 +31,7 @@ export function useAudioPlayer(): { parts: { audio?: HTMLAudioElement } } {
     })
     onCleanup(() => {
       mounted = false
+      stopMute()
       releaseScreen()
       closeFeeds()
       detachElement()

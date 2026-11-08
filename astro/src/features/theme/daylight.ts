@@ -9,6 +9,8 @@ export const DAYLIGHT_POLL_INTERVAL = 10000
 
 /**
  * Returns true if the given hour is within daytime range.
- * Extracted here for use in lib/daylight (future PR).
+ * Recopiée dans le script de démarrage (`boot.ts`), qui passe les bornes : les valeurs
+ * par défaut n'y sont alors jamais lues.
  */
-export const isDayTime = (hour: number): boolean => hour > DAY_START_HOUR && hour < DAY_END_HOUR
+export const isDayTime = (hour: number, start = DAY_START_HOUR, end = DAY_END_HOUR): boolean =>
+  hour > start && hour < end
