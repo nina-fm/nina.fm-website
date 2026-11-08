@@ -2,8 +2,12 @@ import { For } from 'solid-js'
 import Tooltip from '~/shared/ui/Tooltip.tsx'
 import type { Star } from './stars.ts'
 
-/** La constellation des auditeurs (`Audience.vue`), une étoile par auditeur compté. */
-export default function Audience(props: { stars: readonly Star[]; count: number }) {
+/**
+ * La constellation des auditeurs (`Audience.vue`) : une étoile par autre auditeur, et
+ * l'info-bulle qui les compte tous, l'auditeur courant compris. La prod y affichait les
+ * autres seulement (website#61).
+ */
+export default function Audience(props: { stars: readonly Star[]; listeners: number }) {
   return (
     <div class="absolute top-0 right-0 bottom-0 left-0 h-full w-full">
       <For each={props.stars}>
@@ -15,7 +19,7 @@ export default function Audience(props: { stars: readonly Star[]; count: number 
                 <>
                   <strong>Une constellation d'auditeurs !</strong>
                   <br />
-                  Actuellement {props.count} personnes écoutent Nina.fm.
+                  Actuellement {props.listeners} personnes écoutent Nina.fm.
                 </>
               }
             >

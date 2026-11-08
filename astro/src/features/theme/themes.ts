@@ -1,5 +1,5 @@
 import { getNextInCycle } from './cycling.ts'
-import { psychedelicColors } from './rainbowColors.ts'
+import { flashyColors, psychedelicColors } from './rainbowColors.ts'
 
 /**
  * Les thèmes du site, repris de `app/themes/*\/index.ts` (Nuxt). Un thème habille
@@ -7,7 +7,7 @@ import { psychedelicColors } from './rainbowColors.ts'
  * contrôles la coquille lui montre.
  */
 
-/** Tous les thèmes qu'un cookie de la prod peut nommer, portés ou non. */
+/** Tous les thèmes qu'un cookie de la prod peut nommer. */
 export const THEME_KEYS = ['peak', 'vinyl'] as const
 export type ThemeKey = (typeof THEME_KEYS)[number]
 
@@ -42,12 +42,18 @@ const peak: Theme = {
   },
 }
 
-/**
- * Les thèmes servis, dans l'ordre du bouton de changement. Vinyl s'ajoute avec
- * website#79 : d'ici là, un navigateur qui l'a choisi voit Peak, et son cookie
- * reste tel quel.
- */
-export const THEMES: readonly Theme[] = [peak]
+/** Sans nuit : la prod n'en dessinait pas pour la platine. */
+const vinyl: Theme = {
+  key: 'vinyl',
+  name: 'Vinyl',
+  options: {
+    darkMode: false,
+    rainbow: { class: 'mix-blend-multiply', colors: flashyColors, duration: 6000 },
+  },
+}
+
+/** Les thèmes servis, dans l'ordre du bouton de changement (`publicThemes` de la prod). */
+export const THEMES: readonly Theme[] = [peak, vinyl]
 
 /** Le thème servi pour une préférence, le thème par défaut si elle n'en nomme aucun. */
 export function themeOf(key: string | null): Theme {

@@ -41,6 +41,12 @@ Pas de `tailwind-merge` : chaque usage d'un bouton écrit ses classes fusionnée
 (`shared/ui/button.ts`). Une couleur translucide nouvelle reçoit son repli sans
 `color-mix` dans `styles/global.css`.
 
+Les deux scènes sont dans la page, chacune sous un `hidden [.theme-<clé>_&]:contents` :
+le `data-theme` du `<body>` en montre une, et la bascule de thème ne recharge rien. Ce
+que le thème change dans la coquille commune s'écrit en variantes `[.theme-vinyl_&]`,
+juste dès le HTML du build. Un `@utility` ou un `@theme` va dans `styles/global.css` :
+les feuilles des thèmes ne passent pas par Tailwind, il y serait ignoré (website#79).
+
 Une image qui dépend du jour ou de l'écoute se choisit en CSS d'après les classes du
 `<body>` (`peak/images.ts`, `peak.css`), jamais au build ni dans un îlot : seule celle
 qui s'affiche se télécharge.

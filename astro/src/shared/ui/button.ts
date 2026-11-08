@@ -35,3 +35,12 @@ export function buttonClass(variant: ButtonVariant, size: 'default' | 'sm' | 'lg
 export function controlButtonClass(variant: ButtonVariant): string {
   return `${BUTTON_BASE} text-sm transition-colors h-9 w-9 shadow-none rounded-full [&_svg]:size-4 hover:bg-background/40 ${VARIANT_COLORS[variant]}`
 }
+
+/**
+ * Sous Vinyl, les boutons ronds de la scène sont pleins (`default`) tant que le contenu
+ * est fermé, transparents (`ghost`) une fois ouvert (`themes/vinyl/pages/index.vue`).
+ * Écrit en variantes des classes du `<body>` : juste dès le HTML du build, sans attendre
+ * l'hydratation. Plus spécifiques, elles l'emportent sur `ghost`.
+ */
+export const VINYL_FILLED =
+  '[.theme-vinyl:not(.content)_&]:bg-primary [.theme-vinyl:not(.content)_&]:text-primary-foreground'

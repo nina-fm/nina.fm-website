@@ -43,6 +43,14 @@
   --animate-spin-slow: spin 8s linear infinite;
 }
 
+/* Centré dans son parent positionné (`vinyl.css` de la prod). */
+@utility absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}
+
 /* La prod remplace l'échelle de tailles de texte au lieu de l'étendre. */
 @theme {
   --text-*: initial;
@@ -107,8 +115,20 @@
       background-color: transparent;
     }
   }
+  .bg-primary\/15 {
+    background-color: hsl(var(--primary) / 0.15);
+  }
   .bg-primary\/20 {
     background-color: hsl(var(--primary) / 0.2);
+  }
+  .border-muted\/20 {
+    border-color: hsl(var(--muted) / 0.2);
+  }
+  .text-primary\/30 {
+    color: hsl(var(--primary) / 0.3);
+  }
+  .text-foreground\/20 {
+    color: hsl(var(--foreground) / 0.2);
   }
   .text-foreground\/50 {
     color: hsl(var(--foreground) / 0.5);
