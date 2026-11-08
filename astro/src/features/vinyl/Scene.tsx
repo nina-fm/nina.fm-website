@@ -41,6 +41,7 @@ export default function Scene() {
               <Cover
                 onAir={onAir()}
                 details={scene.details()}
+                content={scene.content()}
                 turned={scene.turned()}
                 scale={scene.scale()}
                 onTurn={scene.turn}

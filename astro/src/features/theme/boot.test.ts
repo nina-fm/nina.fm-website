@@ -30,13 +30,13 @@ describe('boot script', () => {
     expect(run('ninafm-user-rainbowMode=true').classes).toBe('theme-peak rainbow')
   })
 
-  it('should serve the chosen theme, and the default one when it is unknown', () => {
+  it('should serve the default theme when the chosen one is unknown', () => {
     expect(run('ninafm-user-theme=vinyl')).toEqual({ theme: 'vinyl', classes: 'theme-vinyl' })
     expect(run('', { search: '?theme=vinyl' }).theme).toBe('vinyl')
     expect(run('', { search: '?theme=foo' }).theme).toBe('peak')
   })
 
-  it('should never put the night on a theme that has none', () => {
+  it('should not put the night on when the theme has none', () => {
     expect(run('ninafm-user-theme=vinyl; ninafm-user-darkMode=true', { hour: 22 }).classes).toBe('theme-vinyl')
   })
 

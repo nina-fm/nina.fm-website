@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { bootThemes, nextTheme, themeOf } from './themes.ts'
 
 describe('themes', () => {
-  it('should switch between Peak and Vinyl, both ways', () => {
+  it('should go to the other theme when one is active', () => {
     expect(nextTheme(themeOf('peak'))?.key).toBe('vinyl')
     expect(nextTheme(themeOf('vinyl'))?.key).toBe('peak')
   })

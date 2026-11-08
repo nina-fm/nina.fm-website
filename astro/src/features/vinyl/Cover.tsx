@@ -7,15 +7,19 @@ import CoverDetails from './CoverDetails.tsx'
 interface Props {
   onAir: Metadata
   details: boolean
+  content: boolean
   turned: boolean
   scale: number
   onTurn: () => void
 }
 
-/** Le coin bas-gauche quand elle est rangée, le centre de la scène quand elle est ouverte. */
+/**
+ * Le coin bas-gauche quand elle est rangée, hors du cadre quand le contenu est ouvert
+ * (`left-[-1200px]` de la prod), le centre de la scène quand elle est ouverte.
+ */
 const PLACES = {
   closed:
-    'top-0 left-0 -translate-x-1/3 translate-y-[75vh] rotate-[6deg] cursor-pointer sm:translate-y-[65vh] md:-translate-x-3/4 md:translate-y-[70vh] lg:translate-y-[65vh]',
+    'top-0 -translate-x-1/3 translate-y-[75vh] rotate-[6deg] cursor-pointer sm:translate-y-[65vh] md:-translate-x-3/4 md:translate-y-[70vh] lg:translate-y-[65vh]',
   open: 'top-0 left-0 translate-x-[-9%] translate-y-[10%] rotate-[-2deg] sm:translate-y-0 sm:rotate-[-12deg] md:translate-x-[-18%] md:rotate-[-4deg] lg:translate-x-[-8%] lg:translate-y-[0%] lg:rotate-[-6deg] xl:translate-x-[-5%] xl:translate-y-[0%] xl:rotate-[-8deg]',
 }
 
@@ -29,9 +33,10 @@ const PLACES = {
 export default function Cover(props: Props) {
   // Le verso l'emporte, comme `rotate-y-190` déclarée après `rotate-y-10` dans la prod.
   const rotation = () => (props.turned ? 'rotate-y-190' : props.details ? 'rotate-y-10' : 'rotate-y-0')
+  const place = () => (props.details ? PLACES.open : `${PLACES.closed} ${props.content ? 'left-[-1200px]' : 'left-0'}`)
   return (
     <div
-      class={`pointer-events-auto absolute z-10 size-[1000px] origin-top-left bg-transparent transition-all duration-700 ease-in-out perspective-[1000px] ${props.details ? PLACES.open : PLACES.closed}`}
+      class={`pointer-events-auto absolute z-10 size-[1000px] origin-top-left bg-transparent transition-all duration-700 ease-in-out perspective-[1000px] ${place()}`}
       style={{ scale: String(props.scale) }}
       onClick={() => !props.details && openDetails()}
     >

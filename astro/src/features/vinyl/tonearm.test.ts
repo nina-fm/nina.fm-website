@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ARM_RETURN_MS, ARM_STEP_MS, armAngle, armTransition } from './tonearm.ts'
 
 describe('armAngle', () => {
-  it('should go from the edge of the disk to the sticker with the progress', () => {
+  it('should move from the edge of the disk to the sticker when the progress grows', () => {
     expect(armAngle(0)).toBe(0)
     expect(armAngle(50)).toBe(12.5)
     expect(armAngle(100)).toBe(25)
