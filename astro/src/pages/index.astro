@@ -1,13 +1,15 @@
 ---
 import About from '~/features/content/About.astro'
 import Background from '~/features/peak/Background.astro'
-import ContentPanel from '~/features/peak/ContentPanel.tsx'
 import Credits from '~/features/peak/Credits.astro'
-import Scene from '~/features/peak/Scene.tsx'
+import PeakScene from '~/features/peak/Scene.tsx'
 import { PEAK_IMAGE_VARIABLES } from '~/features/peak/images.ts'
+import ContentPanel from '~/features/shell/ContentPanel.tsx'
 import Controls from '~/features/shell/Controls.tsx'
+import VinylScene from '~/features/vinyl/Scene.tsx'
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import '~/features/peak/peak.css'
+import '~/features/vinyl/vinyl.css'
 
 const images = Object.entries(PEAK_IMAGE_VARIABLES)
   .map(([name, value]) => `${name}: ${value}`)
@@ -15,13 +17,20 @@ const images = Object.entries(PEAK_IMAGE_VARIABLES)
 ---
 
 <BaseLayout>
-  {/* Le cadre de Peak (`themes/peak/theme.vue`, `layouts/default.vue`) et sa scène. Les
-      crédits précèdent l'îlot : le panneau des détails doit passer devant eux. */}
-  <main class="theme-peak h-full" style={images}>
+  {/* Le cadre commun aux thèmes (`layouts/default.vue` de chacun), et les deux scènes :
+      le `data-theme` du `<body>` n'en affiche qu'une, et la bascule de thème ne recharge
+      rien. Sous `display: none`, les images de Peak ne se téléchargent pas. Les crédits
+      précèdent l'îlot : le panneau des détails doit passer devant eux. */}
+  <main class="h-full" style={images}>
     <div class="absolute inset-4 overflow-hidden rounded md:inset-5">
-      <Background />
-      <Credits />
-      <Scene client:load />
+      <div class="hidden [.theme-peak_&]:contents">
+        <Background />
+        <Credits />
+        <PeakScene client:load />
+      </div>
+      <div class="hidden [.theme-vinyl_&]:contents">
+        <VinylScene client:load />
+      </div>
       <ContentPanel client:load>
         <About />
       </ContentPanel>

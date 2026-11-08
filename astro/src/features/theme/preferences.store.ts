@@ -51,15 +51,18 @@ export function toggleRainbow(): void {
 }
 
 /**
- * Passe au thème suivant. Chaque thème a sa page, rendue au build : on la recharge
- * sous le nouveau thème plutôt que d'embarquer les deux scènes.
+ * Passe au thème suivant, sans recharger : les deux scènes sont dans la page, et le
+ * `data-theme` que la coquille repose sur le `<body>` montre l'une ou l'autre. Le son
+ * continue. Le `?theme=` d'un lien s'efface de l'adresse : il l'emporterait sur le
+ * cookie au prochain chargement.
  */
 export function toggleTheme(): void {
   const next = preferences.next()
   if (!next) return
   write(COOKIES.theme, next.key)
-  // Sans `?theme=`, qui l'emporte sur le cookie et ramènerait l'ancien thème.
+  setStored({ ...stored(), theme: next.key })
   const url = new URL(location.href)
+  if (!url.searchParams.has('theme')) return
   url.searchParams.delete('theme')
-  location.replace(url)
+  history.replaceState(history.state, '', url)
 }

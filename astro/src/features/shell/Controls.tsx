@@ -2,7 +2,7 @@ import { Match, Show, Switch } from 'solid-js'
 import { toggleMute } from '~/features/playback/mute.store.ts'
 import { toggleDarkMode, toggleRainbow, toggleTheme } from '~/features/theme/preferences.store.ts'
 import { toggleFullscreen } from '~/shared/browser/fullscreen.store.ts'
-import type { ButtonVariant } from '~/shared/ui/button.ts'
+import { type ButtonVariant, VINYL_FILLED } from '~/shared/ui/button.ts'
 import ControlButton from './ControlButton.tsx'
 import { useControls } from './controls.store.ts'
 import Icon from '~/shared/ui/Icon.tsx'
@@ -20,16 +20,20 @@ const twoLines = (title: string, action: string) => (
   </>
 )
 
-/** La colonne de boutons du coin de la scène (`Controls.vue`), commune aux thèmes. */
+/**
+ * La colonne de boutons du coin de la scène (`Controls.vue`), commune aux thèmes. Sous
+ * Vinyl, pleins, puis estompés quand le contenu s'ouvre.
+ */
 export default function Controls(props: Props) {
   const view = useControls()
+  const classes = () => `${VINYL_FILLED} [.theme-vinyl.content_&]:text-muted-foreground ${props.class ?? ''}`
   return (
     <Show when={view.mounted()}>
       <div class="absolute right-1 bottom-1 z-0 flex flex-col items-center justify-end gap-1 md:right-3 md:bottom-3">
         <Show when={view.hasNight()}>
           <ControlButton
             variant={props.variant}
-            class={props.class}
+            class={classes()}
             align="end"
             label="Jour ou nuit"
             onClick={toggleDarkMode}
@@ -57,7 +61,7 @@ export default function Controls(props: Props) {
         <Show when={view.hasRainbow()}>
           <ControlButton
             variant={props.variant}
-            class={props.class}
+            class={classes()}
             align="end"
             label="Mode psychédélique"
             onClick={toggleRainbow}
@@ -72,7 +76,7 @@ export default function Controls(props: Props) {
           {(next) => (
             <ControlButton
               variant={props.variant}
-              class={props.class}
+              class={classes()}
               align="end"
               label="Changer de thème"
               onClick={toggleTheme}
@@ -87,7 +91,7 @@ export default function Controls(props: Props) {
         <Show when={view.playing()}>
           <ControlButton
             variant={props.variant}
-            class={props.class}
+            class={classes()}
             align="end"
             label={view.muted() ? 'Réactiver le son' : 'Couper le son'}
             onClick={toggleMute}
@@ -105,7 +109,7 @@ export default function Controls(props: Props) {
         <Show when={view.hasFullscreen()}>
           <ControlButton
             variant={props.variant}
-            class={props.class}
+            class={classes()}
             align="end"
             label="Plein écran"
             onClick={toggleFullscreen}

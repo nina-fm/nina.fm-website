@@ -38,9 +38,14 @@ const DIST = join(ROOT, 'dist')
  * `js` relevé le 2026-11-08 avec la scène Peak (website#78, seconde moitié) : 34,6 ko,
  * l'îlot de la scène ajoutant 4,1 ko et la page de recette du lecteur en retirant 1,2.
  * Fond, crédits et images restent hors JavaScript (CSS d'après les classes du `<body>`).
+ *
+ * `js` relevé le 2026-11-08 avec la scène Vinyl (website#79) : 39,8 ko, l'îlot de la
+ * platine ajoutant 4,9 ko, dont 1,2 pour le tracé du bras. Les deux scènes sont dans la
+ * page pour basculer de thème sans couper le son ; le logo en traits est partagé entre
+ * elles. `page` inchangée (7,8 ko) : la scène Vinyl n'a rien dans le HTML du build.
  */
 const BUDGET = {
-  js: 36 * 1024,
+  js: 41 * 1024,
   page: 8.5 * 1024,
 }
 

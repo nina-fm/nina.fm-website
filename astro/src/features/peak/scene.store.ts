@@ -25,7 +25,10 @@ export interface SceneView {
   onAir: Accessor<Metadata | null>
   progress: Accessor<number>
   stars: Accessor<readonly Star[]>
+  /** Les autres auditeurs : une étoile chacun. */
   audience: Accessor<number>
+  /** Tous les auditeurs, l'auditeur courant compris : l'info-bulle des étoiles. */
+  listeners: Accessor<number>
   /** Le logo se trace au chargement, jusqu'au premier survol. */
   logoInit: Accessor<boolean>
   settleLogo: () => void
@@ -58,6 +61,7 @@ export function useScene(): SceneView {
     progress: () => (mounted() ? metadata.progress() : 0),
     stars,
     audience,
+    listeners: () => (mounted() ? metadata.listeners() : 0),
     logoInit,
     settleLogo: () => setLogoInit(false),
   }

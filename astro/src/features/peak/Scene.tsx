@@ -14,7 +14,7 @@ export default function Scene() {
   const scene = useScene()
   return (
     <>
-      <Audience stars={scene.stars()} count={scene.audience()} />
+      <Audience stars={scene.stars()} listeners={scene.listeners()} />
       <Show when={scene.mounted()}>
         <Player
           lines={scene.lines()}
