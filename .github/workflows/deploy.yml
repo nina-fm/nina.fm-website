@@ -8,8 +8,10 @@ on:
   push:
     branches: [main]
     # Le site Astro (#75) a son propre déploiement, en staging (`deploy-staging.yml`) : un
-    # push qui ne touche que lui ne relance ni release ni déploiement de la prod.
+    # push qui ne touche que lui ne relance ni release ni déploiement de la prod. Les
+    # consignes de l'agent (`.claude/`) non plus : le merge de #83 a relancé la prod.
     paths-ignore:
+      - '.claude/**'
       - 'astro/**'
       - '.github/workflows/astro-*.yml'
       - '.github/workflows/deploy-staging.yml'
