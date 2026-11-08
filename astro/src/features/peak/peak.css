@@ -83,3 +83,176 @@
     font-family: 'Caveat', sans-serif;
   }
 }
+
+/* Fond et égaliseur : l'image du moment de la journée, animée pendant l'écoute (`images.ts`). */
+.peak-background {
+  background-image: var(--peak-background);
+}
+.dark .peak-background {
+  background-image: var(--peak-background-night);
+}
+.playing .peak-background {
+  background-image: var(--peak-background-playing);
+}
+.playing.dark .peak-background {
+  background-image: var(--peak-background-playing-night);
+}
+.peak-equalizer {
+  background-image: var(--peak-equalizer);
+}
+.dark .peak-equalizer {
+  background-image: var(--peak-equalizer-night);
+}
+.playing .peak-equalizer {
+  background-image: var(--peak-equalizer-playing);
+}
+.playing.dark .peak-equalizer {
+  background-image: var(--peak-equalizer-playing-night);
+}
+
+/* La seconde ligne du lecteur passe devant la première, 2 s toutes les 10 s. */
+@keyframes playerLoop {
+  0% {
+    top: 0;
+  }
+  78% {
+    top: 0;
+  }
+  80% {
+    top: -20px;
+  }
+  99% {
+    top: -20px;
+  }
+  100% {
+    top: 0;
+  }
+}
+
+/* Les étoiles des auditeurs (`Audience.vue`). */
+.peak-star {
+  box-shadow:
+    0 0 3em 0 #fff,
+    0 0 5em 0.3em #fff;
+  transition: all 0.3s ease-in-out;
+  animation: peak-star-appear 1s ease-in;
+}
+@keyframes peak-star-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Le panneau des détails glisse ; ses couleurs suivent le jour et la nuit sans transition. */
+.peak-details {
+  transition:
+    all 0.3s ease-in-out,
+    background-color 0s linear,
+    color 0s linear;
+}
+
+/*
+ * Le logo tracé (`AnimatedLogo.vue`). Les épaisseurs de trait de la prod lisaient des
+ * variables déclarées sur un `:root` scopé, jamais atteint : invalides, elles laissaient
+ * chaque lettre hériter de celle du SVG (`inherit` ici) : 6,4 px, 2,4 px pour « fm ». Seul
+ * le point de « .fm », que sa règle scopée n'atteignait pas, reste à 1 px (relevé en prod
+ * le 2026-11-08).
+ */
+.peak-logo {
+  transition: all 0.3s ease-in-out;
+}
+.peak-logo svg:hover {
+  opacity: 0.8;
+}
+.peak-logo svg .line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1000 1000;
+  stroke-dashoffset: 0;
+  stroke-width: 1px;
+  transition:
+    all 3s ease-out,
+    stroke-dasharray 0s,
+    stroke-dashoffset 0s;
+}
+.peak-logo.init svg .line {
+  stroke-dashoffset: 1000;
+  animation: peak-dash 1s 0s linear 1 forwards;
+}
+.peak-logo svg .letter-n {
+  animation-duration: 1.8s !important;
+  animation-delay: 1.5s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-i {
+  animation-duration: 2.2s !important;
+  animation-delay: 1.9s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-i-dot {
+  animation-duration: 1s !important;
+  animation-delay: 2.1s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-n2 {
+  animation-duration: 1.8s !important;
+  animation-delay: 2.3s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-a {
+  animation-duration: 1.8s !important;
+  animation-delay: 2.7s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-a-bar {
+  animation-duration: 1.5s !important;
+  animation-delay: 2.9s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-f {
+  animation-duration: 1.2s !important;
+  animation-delay: 3.6s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-f-bar {
+  animation-duration: 1.6s !important;
+  animation-delay: 3.6s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-m {
+  animation-duration: 1s !important;
+  animation-delay: 3.7s !important;
+  stroke-width: inherit;
+}
+.peak-logo svg .letter-a-bar,
+.peak-logo svg .letter-i-dot,
+.peak-logo svg .sub-word {
+  transition: opacity 0.3s;
+}
+.peak-logo svg:hover .letter-a-bar,
+.peak-logo svg:hover .letter-i-dot,
+.peak-logo svg:hover .sub-word {
+  opacity: 0;
+}
+.peak-logo svg:hover .letter-n,
+.peak-logo svg:hover .letter-i,
+.peak-logo svg:hover .letter-n2,
+.peak-logo svg:hover .letter-a {
+  transition: stroke-dasharray 0s;
+  stroke-dashoffset: 0;
+  animation: peak-dash 5s 0s linear infinite forwards;
+  animation-delay: 0s !important;
+  stroke-dasharray: 100 100 !important;
+}
+@keyframes peak-dash {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
