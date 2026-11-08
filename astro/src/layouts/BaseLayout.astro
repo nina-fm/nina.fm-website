@@ -1,6 +1,9 @@
 ---
 import { ClientRouter } from 'astro:transitions'
 import AudioPlayer from '~/features/playback/AudioPlayer.tsx'
+import Shell from '~/features/shell/Shell.tsx'
+import { bootScript } from '~/features/theme/boot.ts'
+import { DEFAULT_THEME } from '~/features/theme/themes.ts'
 import { config } from '~/shared/site/config.ts'
 import { robotsMeta, isProduction } from '~/shared/site/indexing.ts'
 import { DESCRIPTION, FACEBOOK_APP_ID, SITE, STATCOUNTER, TITLE } from '~/shared/site/site.ts'
@@ -38,8 +41,15 @@ const image = new URL('/preview.png', SITE).href
     {/* Navigation sans recharger le document, donc sans couper le son. */}
     <ClientRouter />
   </head>
-  <body>
+  {/* Le thème par défaut dans le HTML : c'est lui qui reste si le script échoue. */}
+  <body data-theme={DEFAULT_THEME} class={`theme-${DEFAULT_THEME}`}>
+    {/* Premier enfant du `<body>`, bloquant : thème, nuit et arc-en-ciel posés avant le
+        premier affichage, d'après les cookies de l'auditeur (`theme/boot.ts`). */}
+    <script is:inline set:html={bootScript()} />
     <slot />
+    {/* La coquille, persistante comme le lecteur : calque d'autoplay, toasts, débogueur,
+        arc-en-ciel, et ce qui suit la page (classes du `<body>`, titre, clavier). */}
+    <Shell client:load transition:persist="shell" transition:persist-props />
     {/* Le lecteur, hors des pages et persistant : un seul élément audio dans tout le
         site, et l'écoute qui continue d'une page à l'autre. `transition:persist-props` :
         Astro ne lui redonne jamais de propriétés, qui le remonteraient. */}

@@ -11,4 +11,8 @@ export const autoplay = {
   settle(allowed: boolean): void {
     setState(allowed ? 'allowed' : 'blocked')
   },
+  /** L'auditeur a lancé l'écoute d'un geste : la page peut jouer désormais. */
+  unlock(): void {
+    setState('allowed')
+  },
 }

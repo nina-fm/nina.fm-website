@@ -27,10 +27,17 @@ const DIST = join(ROOT, 'dist')
  * Solid 7,4, le routeur client 5,7 (qui garde le son entre les pages), le lecteur et
  * les flux SSE 4,0, les deux îlots 2,3 ; `mime` retiré au passage (−11 ko). Marge
  * d'environ 1 ko. La coquille (#78) le relèvera de nouveau, sciemment, et datera ici.
+ *
+ * Relevés le 2026-11-08 avec la coquille (website#78, première moitié) : `js` 31,7 ko,
+ * dont le runtime Solid 8,5 (+1,1 : `Show`, `For`, `Switch`), l'îlot de la coquille 4,2,
+ * les icônes de la prod 2,8, les contrôles 1,2, le panneau 1,2 ; `lucide-solid` écarté
+ * au profit de ses seuls tracés (−4,6 ko). `page` 7,4 ko : About rendu au build, sans
+ * JavaScript, et le script de démarrage du thème. Marge d'environ 1 ko chacun ; la scène
+ * Peak (seconde moitié) les relèvera de nouveau.
  */
 const BUDGET = {
-  js: 20 * 1024,
-  page: 5 * 1024,
+  js: 33 * 1024,
+  page: 8.5 * 1024,
 }
 
 const gzipped = (buffer: Buffer) => gzipSync(buffer, { level: 9 }).length

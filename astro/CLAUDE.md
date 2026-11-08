@@ -7,8 +7,9 @@ ses outils ; toutes les commandes se lancent depuis `astro/`. Socle repris d'ohm
 
 ## Où va le code
 
-- `src/features/<domaine>/` : `playback`, `metadata`, `theme`, `install`… ; `src/shared/` :
-  ce que plusieurs domaines utilisent (`site`, `sse`, `browser`), sans importer de domaine.
+- `src/features/<domaine>/` : `playback`, `metadata`, `theme` (préférences), `shell` (coquille
+  commune aux thèmes), `peak`, `content`, `install`… ; `src/shared/` : ce que plusieurs
+  domaines utilisent (`site`, `sse`, `browser`, `ui`), sans importer de domaine.
 - Imports entre dossiers par `~/` (`src/`), dans un dossier par `./`, extension `.ts` écrite.
 - Tests unitaires à côté du module (`*.test.ts`), environnement Node, sans DOM.
 
@@ -28,6 +29,17 @@ Seul un build `PUBLIC_SITE_ENV=production` est indexable (`src/shared/site/index
 tout autre build pose `noindex, nofollow` sur chaque page, ferme `robots.txt` et coupe
 statcounter. `pnpm check:noindex` le vérifie sur `dist/` et en ligne (`deploy-staging.yml`),
 et le conteneur comme le reverse proxy posent `X-Robots-Tag`.
+
+## Thème et coquille
+
+Les préférences restent dans les cookies de la prod (`ninafm-user-theme`, `-darkMode`,
+`-rainbowMode`, format `useCookie`) : `theme/preferences.ts`. Un script bloquant, premier
+enfant du `<body>`, pose `data-theme` et les classes avant le premier affichage
+(`theme/boot.ts`, recopie de fonctions pures : il ne lit rien hors de ses paramètres) ;
+l'îlot persistant de la coquille les tient ensuite à jour. `.dark` est sur le `<body>`.
+Pas de `tailwind-merge` : chaque usage d'un bouton écrit ses classes fusionnées
+(`shared/ui/button.ts`). Une couleur translucide nouvelle reçoit son repli sans
+`color-mix` dans `styles/global.css`.
 
 ## Lecteur
 
