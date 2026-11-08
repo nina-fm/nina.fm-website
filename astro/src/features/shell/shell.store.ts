@@ -22,8 +22,7 @@ import { rotateTabTitle } from './tab-title.client.ts'
 export function useShell(): { mounted: Accessor<boolean>; listening: Accessor<ListeningFlags> } {
   const mounted = useMounted(() => {
     loadPreferences()
-    const stops = [followDaylight(), followFullscreen(), rotateTabTitle(), listenToKeys()]
-    followBody()
+    const stops = [followDaylight(), followFullscreen(), rotateTabTitle(), listenToKeys(), followBody()]
     followNotices()
     followDebug()
     closeDetailsOffMixtape()

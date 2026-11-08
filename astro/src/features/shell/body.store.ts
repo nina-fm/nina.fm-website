@@ -12,7 +12,7 @@ import { panels } from './panels.store.ts'
  * (`theme/boot.ts`) : elles pilotent les variantes Tailwind des thèmes. `ClientRouter`
  * remplace le `<body>` à chaque navigation : elles y sont reposées.
  */
-export function followBody(): void {
+export function followBody(): () => void {
   const apply = () => {
     const theme = preferences.theme().key
     document.body.dataset.theme = theme
@@ -28,4 +28,5 @@ export function followBody(): void {
   }
   createEffect(apply)
   document.addEventListener('astro:after-swap', apply)
+  return () => document.removeEventListener('astro:after-swap', apply)
 }

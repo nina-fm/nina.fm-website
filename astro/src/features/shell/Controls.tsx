@@ -102,18 +102,20 @@ export default function Controls(props: Props) {
             </Show>
           </ControlButton>
         </Show>
-        <ControlButton
-          variant={props.variant}
-          class={props.class}
-          align="end"
-          label="Plein écran"
-          onClick={toggleFullscreen}
-          tooltip={view.fullscreen() ? 'Quitter le mode plein écran' : 'Passer en mode plein écran'}
-        >
-          <Show when={view.fullscreen()} fallback={<Icon name="maximize" />}>
-            <Icon name="minimize" />
-          </Show>
-        </ControlButton>
+        <Show when={view.hasFullscreen()}>
+          <ControlButton
+            variant={props.variant}
+            class={props.class}
+            align="end"
+            label="Plein écran"
+            onClick={toggleFullscreen}
+            tooltip={view.fullscreen() ? 'Quitter le mode plein écran' : 'Passer en mode plein écran'}
+          >
+            <Show when={view.fullscreen()} fallback={<Icon name="maximize" />}>
+              <Icon name="minimize" />
+            </Show>
+          </ControlButton>
+        </Show>
       </div>
     </Show>
   )

@@ -19,6 +19,8 @@ export interface ControlsView {
   playing: Accessor<boolean>
   muted: Accessor<boolean>
   fullscreen: Accessor<boolean>
+  /** Le navigateur permet le plein écran. */
+  hasFullscreen: Accessor<boolean>
 }
 
 export function useControls(): ControlsView {
@@ -33,5 +35,6 @@ export function useControls(): ControlsView {
     playing: () => player.state.status === 'playing',
     muted: mute.muted,
     fullscreen: screenMode.fullscreen,
+    hasFullscreen: screenMode.available,
   }
 }

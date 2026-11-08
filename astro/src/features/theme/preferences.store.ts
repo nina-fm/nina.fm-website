@@ -58,5 +58,8 @@ export function toggleTheme(): void {
   const next = preferences.next()
   if (!next) return
   write(COOKIES.theme, next.key)
-  location.reload()
+  // Sans `?theme=`, qui l'emporte sur le cookie et ramènerait l'ancien thème.
+  const url = new URL(location.href)
+  url.searchParams.delete('theme')
+  location.replace(url)
 }

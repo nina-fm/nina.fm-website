@@ -3,9 +3,9 @@
  * mêmes noms, même format, pour qu'un navigateur les garde à la bascule (website#80).
  *
  * `readCookie`, `readPreferences`, `isDarkActive` et `bodyClasses` sont aussi recopiés
- * tels quels dans le script qui pose le thème avant le premier affichage (`boot.build.ts`) :
- * des déclarations de fonction, qui ne lisent rien hors de leurs paramètres et de ces
- * quatre-là. `boot.test.ts` le vérifie en exécutant le script seul.
+ * tels quels dans le script qui pose le thème avant le premier affichage (`HELPERS` de
+ * `boot.ts`) : ils ne lisent rien hors de leurs paramètres et des autres fonctions
+ * recopiées. `boot.test.ts` le vérifie en exécutant le script seul.
  */
 
 export const COOKIES = {

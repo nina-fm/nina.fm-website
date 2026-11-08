@@ -22,7 +22,9 @@ export function useRainbow(): RainbowView {
 
   createEffect(() => {
     if (!active()) return setIndex(0)
-    const advance = () => setIndex((index() + 1) % colors().length)
+    const count = colors().length
+    // Setter fonctionnel : lire `index()` ici abonnerait l'effet au signal qu'il écrit.
+    const advance = () => setIndex((current) => (current + 1) % count)
     // La première couleur part tout de suite, comme dans la prod.
     advance()
     const interval = setInterval(advance, duration())

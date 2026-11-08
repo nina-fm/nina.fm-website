@@ -8,7 +8,7 @@ export const DAY_END_HOUR = 20
 export const DAYLIGHT_POLL_INTERVAL = 10000
 
 /**
- * Returns true if the given hour is within daytime range.
+ * Vrai si l'heure est de jour, bornes exclues.
  * Recopiée dans le script de démarrage (`boot.ts`), qui passe les bornes : les valeurs
  * par défaut n'y sont alors jamais lues.
  */

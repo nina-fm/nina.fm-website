@@ -102,6 +102,10 @@
     .md\:bg-background\/90 {
       background-color: hsl(var(--background) / 0.9);
     }
+    /* Hors calque lui aussi : sinon le repli ci-dessus l'emporterait (panneau de contenu). */
+    .md\:bg-transparent {
+      background-color: transparent;
+    }
   }
   .text-foreground\/80,
   .theme-vinyl .\[\.theme-vinyl_\&\]\:text-foreground\/80 {
