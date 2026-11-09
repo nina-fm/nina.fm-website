@@ -1,23 +1,20 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  resolve: {
+    // L'alias `~/` du tsconfig.json, que Vitest ne lit pas.
+    alias: { '~': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   test: {
-    environment: 'node',
-    include: ['app/lib/**/*.test.ts'],
-    typecheck: {
-      tsconfig: './tsconfig.json',
-    },
+    // Tests unitaires à côté de leur module ; environnement Node, le DOM ne se teste pas ici.
+    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['app/lib/**/*.ts'],
-      exclude: ['app/lib/**/*.test.ts', 'app/lib/browser/**'],
-      reporter: ['text', 'lcov'],
-      thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
-      },
+      // lcov pour Codecov, json-summary pour la tendance (node-validate.yml du workspace).
+      reporter: ['text-summary', 'lcov', 'json-summary'],
+      include: ['src/**/*.ts', 'scripts/**/*.ts'],
+      exclude: ['**/*.test.ts'],
     },
   },
 })

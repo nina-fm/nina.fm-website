@@ -1,5 +1,1 @@
-pnpm lint && pnpm type-check
-# Le site Astro (#75) a son propre lint et son type-check, lancés s'il diffère de main.
-if git diff --name-only origin/main...HEAD | grep -q '^astro/'; then
-  pnpm --dir astro lint && pnpm --dir astro type-check < /dev/null
-fi
+pnpm lint && pnpm type-check < /dev/null

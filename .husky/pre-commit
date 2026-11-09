@@ -1,6 +1,4 @@
-# En série : un fichier d'astro/ correspond à plusieurs motifs de lint-staged, et deux
-# tâches ne doivent pas l'écrire en même temps.
+# En série : un fichier correspond à plusieurs motifs de lint-staged, et deux tâches ne
+# doivent pas l'écrire en même temps.
 npx lint-staged --concurrent false
 pnpm test
-# Le site Astro (#75) a ses propres tests, lancés s'il est touché.
-if git diff --cached --name-only | grep -q '^astro/'; then pnpm --dir astro test; fi
