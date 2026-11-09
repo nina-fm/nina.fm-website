@@ -1,47 +1,20 @@
 # Checklist de review — nina.fm-website
 
-Ce que le tronc commun de `/nina:review` ne couvre pas : Nuxt en SSR, conventions
-Vue 3 et Pinia, thèmes Peak / Vinyl, logique pure de `app/lib/`, et le site Astro de
-`astro/` (epic #75), dont les sections Nuxt ne s'appliquent pas.
+Ce que le tronc commun de `/nina:review` ne couvre pas : rôles des fichiers du site
+Astro, lecteur, thèmes Peak / Vinyl, budget de performance, indexation et déploiement.
 Les règles génériques (TypeScript, tests, sécurité, langue, changeset, recette)
 vivent dans la commande — ne pas les recopier ici.
 
-Les globs se déduisent de `nuxt.config.ts` (`components`, `pinia.storesDirs`), pas
-d'un `ls` : les stores de thème de `app/themes/*/stores/` ont échappé au premier jet.
+#### Code du site (`src/**`)
 
-#### Nuxt en SSR (`app/**`)
-- [ ] `window`, `document`, `navigator`, `EventSource`, `Audio` et `localStorage` ne sont touchés que sous `import.meta.client` ou dans un hook client (`onMounted`, `onNuxtReady`, plugin `.client.ts`)
-- [ ] Le SSE passe par `SseClient` (`app/lib/sse/`), jamais par un `EventSource` ouvert à la main hors de `app/lib/sse/`, et chaque client ouvert est fermé (`disconnect()` dans `onScopeDispose` ou `onUnmounted`)
-- [ ] Requêtes HTTP par `$fetch`, `useFetch` ou `useAsyncData`, appelées depuis un store — jamais un `fetch` brut
-- [ ] Variables d'environnement lues par `useRuntimeConfig()` : `process.env` ne sert que dans `nuxt.config.ts`
-- [ ] Aucune URL d'API ou de stream en dur — elles viennent de `runtimeConfig.public`
-
-#### Composants Vue (`app/**/*.vue`)
-- [ ] `defineProps<T>()` et `defineEmits<T>()` génériques, jamais l'options API
-- [ ] Valeur dérivée en `computed()`, jamais recalculée inline dans le template
-- [ ] `watch()` / `watchEffect()` réservés aux effets de bord, pas au calcul d'une valeur dérivée
-- [ ] Pas de `v-if` et `v-for` sur le même élément (wrapper `<template>`) ; `:key` sur chaque `v-for`
-- [ ] Aucune règle métier dans un `.vue` : elle va dans `app/lib/` (avec son test) ou dans une action de store
-- [ ] Primitives UI prises dans `app/components/ui/` (shadcn-vue), pas réinventées
-- [ ] Icônes importées depuis `lucide-vue-next` (`import { Play } from 'lucide-vue-next'`)
-
-#### Thèmes Peak / Vinyl (`app/themes/**`)
-- [ ] Fichier nommé sans préfixe (`Player.vue`) et utilisé sous son nom préfixé (`<PeakPlayer>`, `<VinylDisk>`) : le préfixe vient de `components` dans `nuxt.config.ts`, un fichier `PeakPlayer.vue` donnerait `<PeakPeakPlayer>`
-- [ ] Deux variantes d'un même composant gardent les mêmes props
-- [ ] Un changement porté par un thème est vérifié sur l'autre : le reporter, ou dire dans la PR pourquoi il ne s'y applique pas
-
-#### Stores Pinia (`app/stores/**`, `app/themes/**/stores/**`)
-- [ ] Syntaxe setup — `defineStore('id', () => { … })`
-- [ ] Nouveau store : aucun store existant ne couvrait déjà le besoin, ni dans `app/stores/` ni dans les stores de thème `app/themes/*/stores/` (`pinia.storesDirs` de `nuxt.config.ts`)
-- [ ] État muté seulement par les actions du store, jamais depuis un composant
-
-#### Logique pure et tests du Nuxt (`app/**`)
-- [ ] Vitest ne collecte que `app/lib/**/*.test.ts` (`vitest.config.ts` de la racine) : un test posé ailleurs ne tourne jamais — la logique testable va dans `app/lib/`
-- [ ] Une fonction pure extraite d'un store ou d'un composant arrive dans `app/lib/<domaine>/` avec son test : le seuil de couverture de 80 % porte sur `app/lib/` (hors `browser/`)
-
-#### Site Astro (`astro/**`)
-- [ ] Le rôle du fichier tient à son nom (`astro/CLAUDE.md`) : `.ts` pur, `.store.ts` état Solid, `.client.ts` effet navigateur sans Solid, `.tsx` rendu sans hook ; une règle pure sortie d'un store va dans un `.ts` avec son test
-- [ ] Les tests vivent à côté du module, sous `astro/src/` (son `vitest.config.ts` collecte `src/**/*.test.ts`), et une donnée de test partagée dans un `.fixture.ts`
+- [ ] Le rôle du fichier tient à son nom (`CLAUDE.md`) : `.ts` pur, `.store.ts` état Solid, `.client.ts` effet navigateur sans Solid, `.tsx` rendu sans hook ; une règle pure sortie d'un store va dans un `.ts` avec son test
+- [ ] Les tests vivent à côté du module (`vitest.config.ts` collecte `src/**/*.test.ts` et `scripts/**/*.test.ts`), et une donnée de test partagée dans un `.fixture.ts`
 - [ ] `play()` s'appelle dans la tâche même du geste (iOS), jamais depuis un effet ni après un `await`
 - [ ] Un îlot ne lit l'état de module (`player`, `metadata`) qu'après `onMount` : hydraté après un changement, il garderait sinon les valeurs du rendu statique
+- [ ] Un changement porté par un thème est vérifié sur l'autre : le reporter, ou dire dans la PR pourquoi il ne s'y applique pas
 - [ ] Le JavaScript ajouté tient dans le budget (`pnpm perf:budget`) ; un budget relevé l'est sciemment, daté, dans `scripts/performance-budget.ts`
+
+#### Indexation et déploiement (`deploy/**`, `.github/workflows/**`, `src/shared/site/**`)
+
+- [ ] Un staging reste fermé aux moteurs, la prod ouverte : aucun `X-Robots-Tag` dans `nginx.production.conf`, et chaque `location` de `nginx.staging.conf` qui pose un en-tête répète le sien
+- [ ] Pages et `sw.js` en `no-cache`, rien sur `/_astro/` : le cache long est au reverse proxy

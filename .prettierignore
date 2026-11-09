@@ -1,2 +1,5 @@
-# Le site Astro (#75) a sa propre config Prettier (astro/.prettierrc.json)
-astro/
+dist/
+.astro/
+node_modules/
+pnpm-lock.yaml
+coverage/

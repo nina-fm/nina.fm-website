@@ -1,0 +1,235 @@
+name: Deploy Static
+
+# Déploiement du site statique, commun au staging (`deploy-staging.yml`) et à la prod
+# (`deploy.yml`). Pas d'image : le `dist/` construit par `validate.yml` est copié sur le
+# serveur dans <site>/releases/<sha>-<run>, puis servi par un conteneur nginx:alpine
+# (deploy/docker-compose.<env>.yml) une fois le lien `current` basculé. Retour arrière :
+# rebasculer `current` sur la release précédente, gardée.
+#
+# Les fichiers de _astro/ des builds des 30 derniers jours restent servis : une page
+# ancienne, encore ouverte ou gardée par un service worker, charge encore ses scripts et
+# ses images (website#87). Une image Docker ne contiendrait que son build.
+#
+# Contrôles : sur le serveur, le conteneur sert ce commit avec les bons en-têtes ; puis
+# en ligne, à travers le reverse proxy, si l'URL publique sert ce commit. `must-serve`
+# rend ce dernier contrôle obligatoire : faux pour la prod tant que www sert le Nuxt
+# (bascule par nina.fm-webserver, website#80).
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "staging ou production : choisit l'artefact dist-<env> et les fichiers deploy/*.<env>.*"
+        type: string
+        required: true
+      base-dir:
+        description: "Dossier de l'environnement sur le serveur (incoming/, deploy/)"
+        type: string
+        required: true
+      site-subdir:
+        description: 'Sous-dossier de base-dir monté en lecture seule dans le conteneur (releases/, current), vide pour base-dir'
+        type: string
+        default: ''
+      compose-file:
+        description: 'Nom du compose dans base-dir/deploy/'
+        type: string
+        default: docker-compose.yml
+      container:
+        description: 'container_name du compose'
+        type: string
+        required: true
+      port:
+        description: 'Port publié sur 127.0.0.1 par le compose'
+        type: number
+        required: true
+      public-url:
+        description: 'URL publique, derrière le reverse proxy'
+        type: string
+        required: true
+      indexing:
+        description: 'noindex ou indexable'
+        type: string
+        required: true
+      must-serve:
+        description: "Échouer si l'URL publique ne sert pas ce commit"
+        type: boolean
+        default: true
+    secrets:
+      SERVER_HOST:
+        required: true
+      SERVER_USER:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout de la config de déploiement
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .nvmrc
+            deploy
+            scripts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Récupérer dist/
+        uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ inputs.environment }}
+          path: dist
+
+      - name: Empaqueter le site
+        run: |
+          test -f dist/index.html
+          tar -czf site.tgz -C dist .
+          echo "SITE_SHA256=$(sha256sum site.tgz | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "INDEX_SHA256=$(sha256sum dist/index.html | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      # Compose et conf nginx du commit déployé, transmis au serveur avec leur empreinte.
+      # Délimiteur aléatoire : une ligne d'un fichier ne peut pas clore la valeur.
+      - name: Lire la config de déploiement
+        id: config
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          for key in compose nginx; do
+            case $key in
+              compose) f="deploy/docker-compose.$ENVIRONMENT.yml" ;;
+              nginx) f="deploy/nginx.$ENVIRONMENT.conf" ;;
+            esac
+            test -f "$f"
+            delim="EOF_$(openssl rand -hex 16)"
+            { echo "${key}<<$delim"; cat "$f"; echo "$delim"; } >> "$GITHUB_OUTPUT"
+            echo "${key}_sha256=$(sha256sum "$f" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Copier le site sur le serveur
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: site.tgz
+          target: ${{ inputs.base-dir }}/incoming
+
+      - name: Basculer le site
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          BASE: ${{ inputs.base-dir }}
+          SUBDIR: ${{ inputs.site-subdir }}
+          COMPOSE_FILE_NAME: ${{ inputs.compose-file }}
+          CONTAINER: ${{ inputs.container }}
+          PORT: ${{ inputs.port }}
+          INDEXING: ${{ inputs.indexing }}
+          # Unique par run : redéployer le même commit ne réécrit pas la version servie.
+          RELEASE: ${{ github.sha }}-${{ github.run_id }}
+          SITE_SHA256: ${{ env.SITE_SHA256 }}
+          INDEX_SHA256: ${{ env.INDEX_SHA256 }}
+          COMPOSE: ${{ steps.config.outputs.compose }}
+          COMPOSE_SHA256: ${{ steps.config.outputs.compose_sha256 }}
+          NGINX_CONF: ${{ steps.config.outputs.nginx }}
+          NGINX_CONF_SHA256: ${{ steps.config.outputs.nginx_sha256 }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 5m
+          envs: BASE,SUBDIR,COMPOSE_FILE_NAME,CONTAINER,PORT,INDEXING,RELEASE,SITE_SHA256,INDEX_SHA256,COMPOSE,COMPOSE_SHA256,NGINX_CONF,NGINX_CONF_SHA256
+          script: |
+            set -eu
+            SITE="$BASE${SUBDIR:+/$SUBDIR}"
+            mkdir -p "$BASE/incoming" "$BASE/deploy" "$SITE/releases"
+
+            echo "$SITE_SHA256  $BASE/incoming/site.tgz" | sha256sum -c || { echo "❌ Site corrompu en transit"; exit 1; }
+            cd "$SITE"
+            mkdir "releases/$RELEASE"
+            tar -xzf "$BASE/incoming/site.tgz" -C "releases/$RELEASE"
+            rm -f "$BASE/incoming/site.tgz"
+            test -f "releases/$RELEASE/index.html"
+
+            # Noms à hash : rien ne s'écrase. cp -a garde la date du build d'origine, sur
+            # laquelle l'élagage se règle (website#87).
+            mkdir -p "releases/$RELEASE/_astro"
+            if [ -d current/_astro ]; then cp -an current/_astro/. "releases/$RELEASE/_astro/"; fi
+            find "releases/$RELEASE/_astro" -type f -mtime +30 -delete
+
+            cd "$BASE/deploy"
+            printf '%s\n' "$COMPOSE" > "$COMPOSE_FILE_NAME"
+            echo "$COMPOSE_SHA256  $COMPOSE_FILE_NAME" | sha256sum -c || { echo "❌ Compose corrompu en transit"; exit 1; }
+            printf '%s\n' "$NGINX_CONF" > nginx.conf
+            echo "$NGINX_CONF_SHA256  nginx.conf" | sha256sum -c || { echo "❌ Conf nginx corrompue en transit"; exit 1; }
+
+            # Lien relatif, résolu dans le conteneur sous /srv ; mv -T le remplace d'un coup.
+            cd "$SITE"
+            ln -sfn "releases/$RELEASE" current.tmp
+            mv -Tf current.tmp current
+
+            cd "$BASE/deploy"
+            docker compose -f "$COMPOSE_FILE_NAME" up -d
+            # La conf est montée en fichier : la relire sans recréer le conteneur.
+            docker exec "$CONTAINER" nginx -t
+            docker exec "$CONTAINER" nginx -s reload
+
+            echo "🔍 Health check..."
+            for i in $(seq 1 12); do
+              if curl -sf -o /dev/null "http://127.0.0.1:$PORT/"; then break; fi
+              if [ "$i" -eq 12 ]; then
+                echo "❌ Site non joignable après 12 tentatives"
+                docker logs "$CONTAINER" --tail 50
+                exit 1
+              fi
+              echo "⏳ Tentative $i/12..."
+              sleep 5
+            done
+
+            # Le conteneur, sans le reverse proxy : ce commit, revalidé, indexable ou non.
+            served=$(curl -sf "http://127.0.0.1:$PORT/" | sha256sum | cut -d' ' -f1)
+            [ "$served" = "$INDEX_SHA256" ] || { echo "❌ Le conteneur ne sert pas ce commit"; exit 1; }
+            for path in / /sw.js; do
+              headers=$(curl -sfI "http://127.0.0.1:$PORT$path")
+              echo "$headers" | grep -qi '^cache-control: *no-cache' || { echo "❌ $path sans Cache-Control: no-cache"; exit 1; }
+              if [ "$INDEXING" = indexable ]; then
+                ! echo "$headers" | grep -qi '^x-robots-tag' || { echo "❌ $path ferme la prod aux moteurs (X-Robots-Tag)"; exit 1; }
+              else
+                echo "$headers" | grep -qi '^x-robots-tag: *noindex, nofollow' || { echo "❌ $path sans X-Robots-Tag noindex"; exit 1; }
+              fi
+            done
+            echo "✅ Servi : $RELEASE"
+
+            # Garder la version servie et la précédente.
+            cd "$SITE/releases"
+            ls -1t | tail -n +3 | xargs -r rm -rf
+            docker stats --no-stream --format 'Mémoire : {{.MemUsage}}' "$CONTAINER"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      # De bout en bout, à travers le reverse proxy : la page servie est celle du commit,
+      # revalidée, et le site en ligne est indexable ou fermé comme attendu.
+      - name: Vérifier le site en ligne
+        env:
+          URL: ${{ inputs.public-url }}
+          INDEXING: ${{ inputs.indexing }}
+          MUST_SERVE: ${{ inputs.must-serve }}
+        run: |
+          served=$(curl -sf "$URL/" | sha256sum | cut -d' ' -f1)
+          if [ "$served" != "$INDEX_SHA256" ]; then
+            if [ "$MUST_SERVE" = true ]; then echo "❌ $URL ne sert pas ce commit"; exit 1; fi
+            echo "::notice::$URL ne sert pas encore ce site : contrôle en ligne sauté."
+            exit 0
+          fi
+          node scripts/check-indexing.ts "$INDEXING" "$URL"
+          # Pages et service worker toujours revalidés (nginx.<env>.conf, website#87).
+          for path in / /sw.js; do
+            curl -sfI "$URL$path" | grep -qi '^cache-control: *no-cache' \
+              || { echo "❌ $path sans Cache-Control: no-cache"; exit 1; }
+          done

@@ -1,13 +1,12 @@
 name: CI
 
 # Validation des pull requests. Séparée de `deploy.yml` par déclencheur et par
-# privilège : elle n'a besoin ni d'écrire, ni des secrets de déploiement
-# (SERVER_HOST, SSH_PRIVATE_KEY…) que `deploy.yml` réserve à ses jobs de
-# déploiement et de nettoyage. Aucun secret n'est passé à `validate.yml`.
+# privilège : elle n'a besoin ni d'écrire, ni des secrets de déploiement. Aucun secret
+# n'est passé à `validate.yml`.
 #
-# La configuration qualité elle-même est dans `validate.yml`, partagée avec
-# `deploy.yml`, pour qu'une PR et `main` ne puissent pas rendre des verdicts
-# différents.
+# La configuration qualité elle-même est dans `validate.yml`, partagée avec les
+# déploiements, pour qu'une PR et `main` ne puissent pas rendre des verdicts différents.
+# Le build de la PR est celui de la prod : c'est lui qui part en ligne au merge.
 
 on:
   pull_request:
@@ -24,3 +23,5 @@ concurrency:
 jobs:
   validate:
     uses: ./.github/workflows/validate.yml
+    with:
+      site-env: production

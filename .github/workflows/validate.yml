@@ -1,32 +1,104 @@
 name: Validate
 
-# Configuration qualité du repo, définie **une seule fois** et appelée par
-# `ci.yml` (pull requests) comme par `deploy.yml` (garde avant déploiement).
-# Deux jeux d'entrées séparés finiraient par diverger et produiraient des
+# Configuration qualité du repo, définie **une seule fois** et appelée par `ci.yml`
+# (pull requests) comme par `deploy.yml` et `deploy-staging.yml` (garde avant
+# déploiement). Deux jeux d'entrées séparés finiraient par diverger et produiraient des
 # verdicts contradictoires entre une PR et `main`.
 #
-# Les étapes elles-mêmes vivent dans `node-validate.yml` au niveau workspace.
-# Même motif que `nina.fm-api` et `nina.fm-faceb`.
+# `quality` : lint, type-check, tests et couverture, dans `node-validate.yml` du workspace,
+# comme `nina.fm-api` et `nina.fm-faceb`.
+# `build` : ce qui est propre au site statique — format, build, budget de performance,
+# indexation attendue, et `dist/` en artefact pour un déploiement.
 #
-# Seul `CODECOV_TOKEN` est accepté, et transmis nommément : pas de
-# `secrets: inherit`, qui ferait descendre jusqu'ici les secrets de déploiement.
-# `deploy.yml` le fournit, `ci.yml` non. L'envoi Codecov est gardé par
-# `github.ref == refs/heads/main` : sauté sur une PR ; sauté aussi, avec un
-# `::notice::`, si `ci.yml` est lancé à la main sur `main`, faute de jeton.
+# Seul `CODECOV_TOKEN` est accepté, et transmis nommément : pas de `secrets: inherit`,
+# qui ferait descendre jusqu'ici les secrets de déploiement. L'envoi Codecov est gardé
+# par `github.ref == refs/heads/main` : sauté sur une PR.
 
 on:
   workflow_call:
+    inputs:
+      site-env:
+        description: 'PUBLIC_SITE_ENV du build : production (indexable) ou staging (fermé aux moteurs)'
+        type: string
+        default: staging
+      upload-dist:
+        description: 'Publier dist/ en artefact pour un déploiement'
+        type: boolean
+        default: false
     secrets:
       CODECOV_TOKEN:
         required: false
+
+permissions:
+  contents: read
 
 jobs:
   quality:
     uses: nina-fm/nina.fm-apps-workspace/.github/workflows/node-validate.yml@main
     with:
-      node-version: '22'
+      node-version: '24'
       type-check: true
       lint-strict: false
       codecov-enabled: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      HUSKY: '0'
+    steps:
+      - name: Vérifier l'environnement demandé
+        env:
+          SITE_ENV: ${{ inputs.site-env }}
+        run: |
+          case "$SITE_ENV" in
+            production) echo "INDEXING=indexable" >> "$GITHUB_ENV" ;;
+            staging) echo "INDEXING=noindex" >> "$GITHUB_ENV" ;;
+            *) echo "❌ site-env inconnu : $SITE_ENV"; exit 1 ;;
+          esac
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+
+      # Même flux et même API pour la prod et le staging : les variables du repo.
+      - name: Build (${{ inputs.site-env }})
+        env:
+          PUBLIC_SITE_ENV: ${{ inputs.site-env }}
+          PUBLIC_AUDIO_STREAM_URL: ${{ vars.PUBLIC_AUDIO_STREAM_URL }}
+          PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+          PUBLIC_API_STREAM_ENDPOINT: ${{ vars.PUBLIC_API_STREAM_ENDPOINT }}
+        run: pnpm build
+
+      - name: Budget de performance
+        run: pnpm perf:budget
+
+      # Un staging indexable, ou une prod qui ne l'est pas, ne part pas.
+      - name: Indexation du build
+        run: pnpm check:indexing "$INDEXING"
+
+      - name: Publier dist/
+        if: inputs.upload-dist
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ inputs.site-env }}
+          path: dist/
+          retention-days: 3
+          if-no-files-found: error
