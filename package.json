@@ -1,6 +1,6 @@
 {
   "name": "nina.fm-website",
-  "version": "2.2.12",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "description": "Site public Nina.fm : Astro statique et îlots Solid",

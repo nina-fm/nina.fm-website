@@ -1,5 +1,11 @@
 # nina.fm-website
 
+## 3.0.0
+
+### Major Changes
+
+- a19f79e: feat: le site passe de Nuxt à Astro statique et îlots Solid, servi par nginx sans processus Node, à l'identique pour l'auditeur
+
 ## 2.2.12
 
 ### Patch Changes
