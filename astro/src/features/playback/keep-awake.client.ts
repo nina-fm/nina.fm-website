@@ -75,6 +75,3 @@ function silence(): void {
   source = null
   void context.suspend()
 }
-
-/** Pour le journal de website#92. */
-export const keepAwakeState = (): string => (source ? (context?.state ?? '-') : wanted ? 'wanted' : 'off')

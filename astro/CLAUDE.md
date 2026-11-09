@@ -58,6 +58,13 @@ Un seul lecteur par page : l'état de `features/playback/` est de module, partag
 `install/same-build.client.ts` recharge la page quand un nouveau build changerait de module.
 `play()` s'appelle dans la tâche même du geste (iOS), jamais depuis un effet.
 
+Écran verrouillé, un iPhone suspend une page muette en 13 à 16 s : une écoute perdue
+reste sonore, par un silence Web Audio lancé page cachée seulement
+(`keep-awake.client.ts`), et reprend seule au retour du réseau. `playing` ne prouve
+pas que le son sort : le chien de garde vérifie que `currentTime` avance. Un appel,
+lui, retire le lecteur de l'écran verrouillé jusqu'au déverrouillage, sans parade
+(website#92).
+
 ## App installée
 
 À chaque ouverture, l'app installée vérifie s'il existe une nouvelle version, sous

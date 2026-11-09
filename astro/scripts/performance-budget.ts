@@ -48,9 +48,13 @@ const DIST = join(ROOT, 'dist')
  * la vérification d'une nouvelle version et son rechargement ajoutant 2,1 ko ; `page`
  * 8,4 ko, avec l'écran de lancement (logo en traits) et son script d'amorce. Marge
  * d'environ 1 ko et 0,5 ko.
+ *
+ * `js` relevé le 2026-11-09 avec la reprise écran verrouillé (website#92) : 43,4 ko,
+ * le silence Web Audio, la reprise au retour du réseau et les images de Peak
+ * redemandées ajoutant 1,5 ko. Marge d'environ 1 ko.
  */
 const BUDGET = {
-  js: 45 * 1024, // TEMPORAIRE (website#92) : journal trace.client.ts, retiré avant le merge
+  js: 44.5 * 1024,
   page: 9 * 1024,
 }
 
