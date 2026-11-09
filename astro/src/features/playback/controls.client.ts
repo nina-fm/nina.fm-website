@@ -131,6 +131,10 @@ function onPlaying(): void {
   stopKeepAwake()
   establish()
   player.confirmPlaying()
+  // `playing` ne prouve pas que le son sort : sur un iPhone verrouillé, un flux
+  // rechargé l'a annoncé sans jamais avancer, et le lecteur se croyait en lecture
+  // (website#92). Le chien de garde vérifie que la lecture avance.
+  armWatchdog(failure)
 }
 
 function onWaiting(): void {

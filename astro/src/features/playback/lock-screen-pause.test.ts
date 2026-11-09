@@ -121,8 +121,25 @@ describe('the lock screen pause on a locked phone', () => {
     audio.fire('playing')
     expect(player.state.status).toBe('playing')
     // Les dix minutes ne courent plus : rien ne met le flux en pause.
-    vi.advanceTimersByTime(10 * 60_000)
+    for (let second = 0; second < 10 * 60; second += 1) {
+      audio.currentTime += 1
+      vi.advanceTimersByTime(1000)
+    }
     expect(audio.paused).toBe(false)
+    expect(player.state.status).toBe('playing')
+    controls.detachElement()
+  })
+
+  it('should reconnect when the stream says playing but never moves', async () => {
+    vi.useFakeTimers()
+    const { controls, player, audio } = await lockedPhone()
+    controls.play(nina)
+    // iOS l'a fait après une coupure réseau, écran verrouillé (website#92).
+    audio.fire('playing')
+    expect(player.state.status).toBe('playing')
+
+    vi.advanceTimersByTime(10_000)
+    expect(player.state.status).toBe('reconnecting')
     controls.detachElement()
   })
 
