@@ -21,7 +21,7 @@ const images = Object.entries(PEAK_IMAGE_VARIABLES)
       le `data-theme` du `<body>` n'en affiche qu'une, et la bascule de thème ne recharge
       rien. Sous `display: none`, les images de Peak ne se téléchargent pas. Les crédits
       précèdent l'îlot : le panneau des détails doit passer devant eux. */}
-  <main class="h-full" style={images}>
+  <main class="h-full" style={images} data-peak-images>
     <div class="absolute inset-4 overflow-hidden rounded md:inset-5">
       <div class="hidden [.theme-peak_&]:contents">
         <Background />

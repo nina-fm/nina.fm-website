@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { RECONNECT_WINDOW_MS } from './controls.ts'
 import { createMockRadio } from './radio.fixture.ts'
 
 const nina = createMockRadio()
@@ -28,8 +29,9 @@ const ANDROID =
 async function lockedPhone(userAgent = IPHONE) {
   const actions = new Map<string, () => void>()
   vi.stubGlobal('document', { ...listenersOf(), documentElement: { lang: 'fr' } })
-  vi.stubGlobal('window', listenersOf())
-  vi.stubGlobal('navigator', {
+  const page = listenersOf()
+  vi.stubGlobal('window', page)
+  const device = {
     onLine: true,
     userAgent,
     maxTouchPoints: 5,
@@ -38,7 +40,8 @@ async function lockedPhone(userAgent = IPHONE) {
       playbackState: 'none',
       setActionHandler: (action: string, handler: () => void) => actions.set(action, handler),
     },
-  })
+  }
+  vi.stubGlobal('navigator', device)
   vi.stubGlobal('location', { origin: 'https://www.nina.example' })
   vi.stubGlobal('MediaMetadata', class {})
   vi.resetModules()
@@ -71,7 +74,17 @@ async function lockedPhone(userAgent = IPHONE) {
     },
   }
   controls.attachElement(audio as unknown as HTMLAudioElement)
-  return { controls, player, audio, press: (action: string) => actions.get(action)!() }
+  return {
+    controls,
+    player,
+    audio,
+    press: (action: string) => actions.get(action)!(),
+    /** Le réseau tombe ou revient, comme le navigateur le signale. */
+    network: (online: boolean) => {
+      device.onLine = online
+      page.fire(online ? 'online' : 'offline')
+    },
+  }
 }
 
 describe('the lock screen pause on a locked phone', () => {
@@ -121,8 +134,57 @@ describe('the lock screen pause on a locked phone', () => {
     audio.fire('playing')
     expect(player.state.status).toBe('playing')
     // Les dix minutes ne courent plus : rien ne met le flux en pause.
-    vi.advanceTimersByTime(10 * 60_000)
+    for (let second = 0; second < 10 * 60; second += 1) {
+      audio.currentTime += 1
+      vi.advanceTimersByTime(1000)
+    }
     expect(audio.paused).toBe(false)
+    expect(player.state.status).toBe('playing')
+    controls.detachElement()
+  })
+
+  it('should reconnect when the stream says playing but never moves', async () => {
+    vi.useFakeTimers()
+    const { controls, player, audio } = await lockedPhone()
+    controls.play(nina)
+    // iOS l'a fait après une coupure réseau, écran verrouillé (website#92).
+    audio.fire('playing')
+    expect(player.state.status).toBe('playing')
+
+    vi.advanceTimersByTime(10_000)
+    expect(player.state.status).toBe('reconnecting')
+    controls.detachElement()
+  })
+
+  it('should play again when the network comes back after the listening was given up', async () => {
+    vi.useFakeTimers()
+    const { controls, player, audio, network } = await lockedPhone()
+    network(false)
+    controls.play(nina)
+    vi.advanceTimersByTime(RECONNECT_WINDOW_MS)
+    expect(player.state.status).toBe('offline')
+
+    // Écran verrouillé, sans geste : la promesse de « En attente du réseau » (website#92).
+    network(true)
+    expect(audio.src).toBe(nina.streamUrl)
+    expect(player.state.status).toBe('loading')
+    controls.detachElement()
+  })
+
+  it('should try again at once when the network comes back during a reconnection', async () => {
+    vi.useFakeTimers()
+    const { controls, player, audio, network } = await lockedPhone()
+    controls.play(nina)
+    audio.fire('playing')
+    network(false)
+    audio.fire('error')
+    expect(player.state.status).toBe('reconnecting')
+    vi.advanceTimersByTime(30_000)
+    const plays = vi.spyOn(audio, 'play')
+
+    network(true)
+    expect(plays).toHaveBeenCalledOnce()
+    expect(audio.src).toBe(nina.streamUrl)
     controls.detachElement()
   })
 

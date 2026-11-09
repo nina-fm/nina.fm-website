@@ -1,5 +1,6 @@
 import { isIos } from '~/shared/device.ts'
 import { IMPOSED_PAUSE_HOLD_MS, PAUSE_AWAKE_MS } from './controls.ts'
+import { stopKeepAwake } from './keep-awake.client.ts'
 import { player } from './player.store.ts'
 import { isListening } from './player.ts'
 import { resetRecovery } from './recovery.client.ts'
@@ -44,12 +45,16 @@ export const keepsAwake = (): boolean => awakeTimer !== undefined
  * Sur iOS, l'élément que le système a mis en pause est laissé tel quel : remis en
  * pause par la page, il n'est plus repris à la fin de l'appel. Laissé seul, rien ne
  * joue pendant l'appel, et le système envoie lecture à la fin (mesuré sur iPhone
- * par ohmyradios, 2026-10-24).
+ * par ohmyradios, 2026-10-24). Écran verrouillé, iOS suspend la page pendant
+ * l'appel et retire le lecteur de l'écran verrouillé : il ne revient, et la lecture
+ * avec lui, qu'au déverrouillage, en une ou deux secondes. Aucun silence ne l'évite,
+ * l'appel prenant l'audio (mesuré sur iPhone, website#92).
  */
 export function pause({ imposed = false } = {}): void {
   // Une écoute abandonnée n'a rien à mettre en pause : son message reste affiché.
   if (!isListening(player.state.status)) return
   pauseImposed = imposed
+  stopKeepAwake()
   resetRecovery()
   clearPause()
   player.pause()

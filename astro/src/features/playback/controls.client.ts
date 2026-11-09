@@ -1,5 +1,6 @@
 import { FIRST_LOAD_TIMEOUT_MS, systemPause } from './controls.ts'
 import { failure, forget, loadWatched, reconnect } from './failure.client.ts'
+import { startKeepAwake, stopKeepAwake, unlockKeepAwake } from './keep-awake.client.ts'
 import { isPauseImposed, keepsAwake, pause, suspendsSilentPages } from './pause.client.ts'
 import { player } from './player.store.ts'
 import { type PlayingRadio, isListening } from './player.ts'
@@ -59,7 +60,7 @@ export function attachElement(element: HTMLAudioElement): void {
   // Un direct ne finit jamais : s'il finit, le serveur l'a lâché.
   on('ended', ofStream(failure))
   on('offline', onOffline, window)
-  on('online', retryNow, window)
+  on('online', onOnline, window)
 
   answerSystem({ play: resume, pause: onSystemPause, stop: () => stop() })
 }
@@ -78,6 +79,7 @@ export function detachElement(): void {
  * fin d'une pause imposée par le système fait exception, voir `resume()`.
  */
 export function play(radio: PlayingRadio): void {
+  unlockKeepAwake()
   // L'écoute déjà en cours : la relancer couperait le son une seconde ou deux, ou
   // ferait tomber une reconnexion. Ni le bouton du site ni celui d'un casque ne
   // sont faits pour ça.
@@ -124,8 +126,13 @@ function onSystemPause(): void {
 }
 
 function onPlaying(): void {
+  stopKeepAwake()
   establish()
   player.confirmPlaying()
+  // `playing` ne prouve pas que le son sort : sur un iPhone verrouillé, un flux
+  // rechargé l'a annoncé sans jamais avancer, et le lecteur se croyait en lecture
+  // (website#92). Le chien de garde vérifie que la lecture avance.
+  armWatchdog(failure)
 }
 
 function onWaiting(): void {
@@ -156,5 +163,18 @@ function onOffline(): void {
   // l'écourterait, et sur un iPhone verrouillé laisserait le système suspendre la
   // page. Le chien de garde dit s'il est vraiment mort, une connexion perdue ne
   // levant pas toujours d'erreur.
-  if (isListening(player.state.status) && reconnectionState() === 'none') armWatchdog(failure)
+  if (!isListening(player.state.status)) return
+  // Le tampon joue encore : la page reste sonore quand il se tait (`keep-awake.client.ts`).
+  startKeepAwake()
+  if (reconnectionState() === 'none') armWatchdog(failure)
+}
+
+/**
+ * Le réseau revient : la tentative suivante part aussitôt, et une écoute abandonnée
+ * faute de réseau reprend, comme le promet son message (« En attente du réseau »).
+ * Hors geste : iOS le permet à l'élément qui a déjà joué.
+ */
+function onOnline(): void {
+  if (player.state.status === 'offline') resume()
+  else retryNow()
 }

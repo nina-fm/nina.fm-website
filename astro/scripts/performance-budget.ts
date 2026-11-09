@@ -48,9 +48,14 @@ const DIST = join(ROOT, 'dist')
  * la vérification d'une nouvelle version et son rechargement ajoutant 2,1 ko ; `page`
  * 8,4 ko, avec l'écran de lancement (logo en traits) et son script d'amorce. Marge
  * d'environ 1 ko et 0,5 ko.
+ *
+ * `js` relevé le 2026-11-09 avec la reprise écran verrouillé (website#92) : 43,7 ko,
+ * le silence Web Audio, la reprise au retour du réseau, les images de Peak
+ * redemandées et la miniature des pochettes trop lourdes ajoutant 1,8 ko. Marge
+ * d'environ 0,8 ko.
  */
 const BUDGET = {
-  js: 43 * 1024,
+  js: 44.5 * 1024,
   page: 9 * 1024,
 }
 

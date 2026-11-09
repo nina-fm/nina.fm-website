@@ -1,3 +1,4 @@
+import { coverFor, lightenCover } from './cover.client.ts'
 import { player } from './player.store.ts'
 import type { PlayingRadio } from './player.ts'
 import { RECLAIM_AFTER_MS, type SystemTrack, sameTrack, systemMetadata } from './system-controls.ts'
@@ -16,7 +17,8 @@ let given: SystemTrack | null = null
 /** Montre l'écoute, avec ce que l'antenne diffuse quand on le sait. */
 export function showOnSystem(radio: PlayingRadio): void {
   if (!supported()) return
-  navigator.mediaSession.metadata = new MediaMetadata(systemMetadata(radio, location.origin, given))
+  const track = given?.cover ? { ...given, cover: coverFor(given.cover) } : given
+  navigator.mediaSession.metadata = new MediaMetadata(systemMetadata(radio, location.origin, track))
 }
 
 /**
@@ -25,11 +27,21 @@ export function showOnSystem(radio: PlayingRadio): void {
  * réécriture peut faire clignoter la pochette. Gardé hors écoute, pour la suivante.
  */
 export function showTrackOnSystem(track: SystemTrack | null): void {
-  const changed = !sameTrack(given, track)
+  if (sameTrack(given, track)) return
   given = track
+  rewrite()
+  // Une pochette trop lourde pour l'écran verrouillé y cède la place à sa miniature.
+  if (track?.cover) {
+    void lightenCover(track.cover).then((lighter) => {
+      if (lighter && given === track) rewrite()
+    })
+  }
+}
+
+/** Réécrit ce que montrent les contrôles système, s'ils montrent une écoute. */
+function rewrite(): void {
   const radio = player.state.radio
-  if (!changed || !radio || !supported() || !navigator.mediaSession.metadata) return
-  showOnSystem(radio)
+  if (radio && supported() && navigator.mediaSession.metadata) showOnSystem(radio)
 }
 
 export function setSystemState(state: MediaSessionPlaybackState): void {

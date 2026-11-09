@@ -1,4 +1,5 @@
 import { ATTEMPT_TIMEOUT_MS, afterFailure, afterRefusal } from './controls.ts'
+import { startKeepAwake } from './keep-awake.client.ts'
 import { clearPause, isPauseImposed } from './pause.client.ts'
 import { player } from './player.store.ts'
 import type { PlayingRadio } from './player.ts'
@@ -61,7 +62,10 @@ function onRejected(error: unknown): void {
 }
 
 function giveUp(): void {
-  abandon(() => (navigator.onLine ? player.reportError() : player.reportOffline()))
+  if (navigator.onLine) return abandon(() => player.reportError())
+  abandon(() => player.reportOffline())
+  // L'écoute reprendra au retour du réseau (`onOnline`) : la page doit l'entendre.
+  startKeepAwake()
 }
 
 /** Renonce à rétablir l'écoute, et dit pourquoi. */

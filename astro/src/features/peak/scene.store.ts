@@ -1,4 +1,4 @@
-import { type Accessor, createEffect, createSignal } from 'solid-js'
+import { type Accessor, createEffect, createSignal, onCleanup, onMount } from 'solid-js'
 import { metadata } from '~/features/metadata/metadata.store.ts'
 import { audienceCount } from '~/features/metadata/onAir.ts'
 import type { Metadata } from '~/features/metadata/types.ts'
@@ -8,6 +8,7 @@ import { player } from '~/features/playback/player.store.ts'
 import { listeningFlags } from '~/features/shell/listening.ts'
 import { panels } from '~/features/shell/panels.store.ts'
 import { useMounted } from '~/shared/ui/mounted.store.ts'
+import { retryImagesWhenOnline } from './images.client.ts'
 import { type PlayerLines, equalizerTooltip, playerLines } from './player.ts'
 import { type Star, nextStars } from './stars.ts'
 
@@ -40,6 +41,7 @@ export function useScene(): SceneView {
   const audience = () => (mounted() ? audienceCount(metadata.listeners()) : 0)
   const [stars, setStars] = createSignal<readonly Star[]>([])
   const [logoInit, setLogoInit] = createSignal(true)
+  onMount(() => onCleanup(retryImagesWhenOnline()))
   createEffect(() => {
     const count = audience()
     setStars((previous) => nextStars(previous, count, Math.random))
