@@ -155,6 +155,21 @@ describe('the system controls while listening', () => {
     controls.detachElement()
   })
 
+  it('should show the thumbnail on the lock screen once the cover is found too heavy', async () => {
+    const cover = 'https://api.nina.example/files/images/covers/a1-mix.jpeg'
+    const thumbnail = 'https://api.nina.example/files/images/covers/thumb/a1-mix.jpeg'
+    const size = (url: string) => (url === cover ? '803122' : '7720')
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({ ok: true, headers: new Headers({ 'content-length': size(url) }) }),
+    )
+    const { controls, client, shown } = await listening()
+
+    client.showTrackOnSystem({ title: 'Eternelle', cover })
+    expect(shown()?.artwork?.[0]?.src).toBe(cover)
+    await vi.waitFor(() => expect(shown()?.artwork?.[0]?.src).toBe(thumbnail))
+    controls.detachElement()
+  })
+
   it('should hand the buttons again a moment after the sound starts, as the iPhone needs', async () => {
     const { controls, player, audio, handlers } = await listening()
     audio.fire('playing')

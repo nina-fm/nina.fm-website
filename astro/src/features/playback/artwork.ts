@@ -45,3 +45,22 @@ export function getArtwork(filepath: unknown, origin: string): MediaImage[] {
 
   return COVER_ARTWORK_SIZES.map((sizes) => ({ src, sizes, type }))
 }
+
+/**
+ * Poids au-delà duquel une pochette est remplacée par sa miniature sur l'écran
+ * verrouillé (`cover.client.ts`). L'iPhone n'y affiche pas une photo de 3024 × 4032
+ * (785 ko) au lancement ni en grand, mais sa miniature de 300 px partout (mesuré,
+ * website#92). Seuil prudent : la limite d'iOS tient plutôt aux pixels qu'au poids.
+ */
+export const COVER_MAX_BYTES = 300 * 1024
+
+/**
+ * La miniature de 300 px que l'API range à côté de chaque image
+ * (`files/images/<dossier>/thumb/<fichier>`), ou `null` pour une autre URL. Une
+ * convention de stockage : en attendant que le flux la donne (nina-fm/nina.fm-api#82),
+ * elle n'est servie qu'après avoir vérifié qu'elle existe.
+ */
+export function thumbnailOf(src: string): string | null {
+  const match = /^(https?:\/\/[^/]+\/files\/images\/[^/]+\/)(?!thumb\/)([^/?#]+)$/.exec(src)
+  return match ? `${match[1]}thumb/${match[2]}` : null
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COVER_ARTWORK_SIZES, DEFAULT_ARTWORK_SIZE, getArtwork } from './artwork.ts'
+import { COVER_ARTWORK_SIZES, DEFAULT_ARTWORK_SIZE, getArtwork, thumbnailOf } from './artwork.ts'
 
 const ORIGIN = 'https://nina.fm'
 const DEFAULT_SRC = `${ORIGIN}/artwork.png`
@@ -66,5 +66,18 @@ describe('getArtwork type', () => {
   it('should read an upper-case extension', () => {
     const result = getArtwork('https://api.nina.fm/covers/MIX.JPEG', ORIGIN)
     result.forEach((entry) => expect(entry.type).toBe('image/jpeg'))
+  })
+})
+
+describe('thumbnailOf', () => {
+  it('should point to the thumbnail the API stores next to an image', () => {
+    expect(thumbnailOf('https://api.nina.fm/files/images/covers/a1-mix.jpeg')).toBe(
+      'https://api.nina.fm/files/images/covers/thumb/a1-mix.jpeg',
+    )
+  })
+
+  it('should find nothing when the URL is not an API image, or already a thumbnail', () => {
+    expect(thumbnailOf('https://nina.fm/artwork.png')).toBeNull()
+    expect(thumbnailOf('https://api.nina.fm/files/images/covers/thumb/a1-mix.jpeg')).toBeNull()
   })
 })
