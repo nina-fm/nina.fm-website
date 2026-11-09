@@ -1,8 +1,11 @@
-/* L'écran de lancement (Launch.astro), sur le fond et la couleur du thème actif, posés
-   sur le `<body>` avant le premier affichage (theme/boot.ts). Caché par défaut : sans
-   script, la page se montre. */
+/* L'écran de lancement (Launch.astro, maquette validée de website#90), sur le fond et
+   la couleur du thème actif, posés sur le `<body>` avant le premier affichage
+   (theme/boot.ts). Caché par défaut : sans script, la page se montre. */
 
 .launch {
+  /* Le logo, la barre et la coche : couleur du texte sur Peak, jaune sur Vinyl. */
+  --launch-accent: currentColor;
+  --launch-muted: hsl(var(--muted-foreground));
   position: fixed;
   inset: 0;
   /* Devant tout, toasts compris (Toaster.tsx). */
@@ -10,7 +13,7 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 24px;
+  gap: 28px;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   opacity: 0;
@@ -22,63 +25,161 @@
     visibility 0s 0.3s;
 }
 
+body[data-theme='vinyl'] .launch {
+  --launch-accent: hsl(var(--primary));
+}
+
+/* Le gris secondaire de Peak la nuit passe sous 4,5:1 en petit corps. */
+body[data-theme='peak'].dark .launch {
+  --launch-muted: hsl(0 0% 77%);
+}
+
 /* Un lancement que le script du `<head>` a décidé, ou une vérification qui se montre
    (au retour au premier plan, au-delà de 300 ms). */
 :root[data-launch] .launch,
 :root[data-update='checking'] .launch,
-:root[data-update='installing'] .launch {
+:root[data-update='installing'] .launch,
+:root[data-update='ready'] .launch {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transition: none;
 }
 
+/* Le logo : l'animation du survol du logo de Peak (peak.css). Les lettres principales
+   parcourues de tirets ; points, barre du « a » et « .fm » effacés. */
 .launch-logo {
   width: 160px;
+  color: var(--launch-accent);
 }
 
-/* Chaque lettre se trace puis s'efface, tant que l'écran est là. */
-.launch-logo .line {
-  stroke-dasharray: 260 260;
-  stroke-dashoffset: 260;
-  animation: launch-draw 1.4s ease-in-out infinite alternate;
+.launch-logo :is(.letter-n, .letter-i, .letter-n2, .letter-a) {
+  stroke-dasharray: 100 100;
+  animation: launch-dash 5s linear infinite;
 }
 
-.launch-logo .letter-i,
-.launch-logo .letter-i-dot {
-  animation-delay: 0.1s;
-}
-.launch-logo .letter-n2 {
-  animation-delay: 0.2s;
-}
-.launch-logo .letter-a,
-.launch-logo .letter-a-bar {
-  animation-delay: 0.3s;
-}
-.launch-logo .sub-word {
-  animation-delay: 0.4s;
+.launch-logo :is(.letter-i-dot, .letter-a-bar, .sub-word) {
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-@keyframes launch-draw {
+@keyframes launch-dash {
+  from {
+    stroke-dashoffset: 1000;
+  }
   to {
     stroke-dashoffset: 0;
   }
 }
 
+/* Version prête, ou mouvement réduit : le logo figé et complet. */
+:root[data-update='ready'] .launch-logo :is(.letter-n, .letter-i, .letter-n2, .letter-a) {
+  animation: none;
+  stroke-dasharray: none;
+}
+:root[data-update='ready'] .launch-logo :is(.letter-i-dot, .letter-a-bar, .sub-word) {
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .launch-logo .line {
+  .launch-logo :is(.letter-n, .letter-i, .letter-n2, .letter-a) {
     animation: none;
-    stroke-dashoffset: 0;
+    stroke-dasharray: none;
+  }
+  .launch-logo :is(.letter-i-dot, .letter-a-bar, .sub-word) {
+    opacity: 1;
   }
 }
 
-.launch-status {
+/* Les étapes partagent une place : le logo ne bouge pas de l'une à l'autre. */
+.launch-steps {
+  display: grid;
+  min-height: 64px;
+  text-align: center;
+}
+
+.launch-step {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   margin: 0;
-  font-size: 14px;
+  visibility: hidden;
   opacity: 0;
   transition: opacity 0.3s;
 }
 
-:root[data-update='installing'] .launch-status {
-  opacity: 0.6;
+:root[data-update='checking'] .launch-checking,
+:root[data-update='installing'] .launch-installing,
+:root[data-update='ready'] .launch-ready {
+  visibility: visible;
+  opacity: 1;
+}
+
+.launch-checking {
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: var(--launch-muted);
+}
+
+.launch-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.launch-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--launch-muted);
+}
+
+.launch-check {
+  width: 16px;
+  height: 16px;
+  color: var(--launch-accent);
+}
+
+/* La barre : l'avancement du précache s'il est connu (precache-progress.client.ts),
+   sinon un segment qui va et vient. */
+.launch-bar {
+  width: 140px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: hsl(var(--border));
+}
+
+.launch-bar > span {
+  display: block;
+  width: 35%;
+  height: 100%;
+  background: var(--launch-accent);
+  animation: launch-indeterminate 1.2s ease-in-out infinite;
+}
+
+:root[data-progress] .launch-bar > span {
+  width: calc(var(--launch-progress) * 100%);
+  animation: none;
+  transition: width 0.25s;
+}
+
+@keyframes launch-indeterminate {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: 300% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-bar > span {
+    animation: none;
+  }
 }

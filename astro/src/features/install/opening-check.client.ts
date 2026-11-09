@@ -1,3 +1,4 @@
+import { followPrecache } from './precache-progress.client.ts'
 import { harmless, reload } from './reload.client.ts'
 import { announce, stepOf } from './update-step.client.ts'
 
@@ -54,8 +55,7 @@ function holdOpening(versions: Versions) {
     if (!open) return
     open = false
     versions.checking = false
-    clearTimeout(show)
-    clearTimeout(deadline)
+    ;[show, deadline].forEach(clearTimeout)
     worker?.removeEventListener('statechange', settle)
     announce(null)
   }
@@ -79,6 +79,8 @@ function holdOpening(versions: Versions) {
     wait(installing: ServiceWorker) {
       worker = installing
       if (shown) announce('installing')
+      // Son avancement, pour la barre ; le suivi s'arrête avec l'ouverture.
+      followPrecache()
       clearTimeout(deadline)
       deadline = setTimeout(done, INSTALL_TIMEOUT_MS)
       worker.addEventListener('statechange', settle)

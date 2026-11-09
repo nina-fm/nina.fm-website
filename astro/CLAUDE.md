@@ -64,7 +64,9 @@ Un seul lecteur par page : l'état de `features/playback/` est de module, partag
 l'écran de lancement (`install/launch.ts`, `Launch.astro`), et se recharge dessus
 seulement si aucune écoute n'est en jeu (`install/register.client.ts`, repris
 d'ohmyradios). L'écran ne reste que le temps nécessaire : coquille montée, vérification
-finie.
+finie. Ses étapes (`data-update` : `checking`, `installing`, `ready`) se montrent en CSS ;
+l'avancement de l'installation, la page le lit dans le cache du service worker
+(`install/precache-progress.ts`) : le `sw.js` de Workbox n'en dit rien.
 
 ## Dépendances
 

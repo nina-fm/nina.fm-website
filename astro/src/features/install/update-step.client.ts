@@ -5,8 +5,11 @@
  * finie (`launch.client.ts`). Repris d'ohmyradios.
  */
 
-/** Ce que fait la vérification, une fois montrée. */
-export type UpdateStep = 'checking' | 'installing'
+/**
+ * Ce que fait la vérification, une fois montrée : elle cherche, installe, puis la
+ * nouvelle version est prête et la page va se recharger dessus (`reload.client.ts`).
+ */
+export type UpdateStep = 'checking' | 'installing' | 'ready'
 
 /** Une vérification en cours, montrée ou pas encore (`pending`). */
 export const checkHeld = (): boolean => 'update' in document.documentElement.dataset
@@ -14,7 +17,7 @@ export const checkHeld = (): boolean => 'update' in document.documentElement.dat
 /** L'étape montrée, s'il y en a une. */
 export function stepOf(): UpdateStep | null {
   const step = document.documentElement.dataset.update
-  return step === 'checking' || step === 'installing' ? step : null
+  return step === 'checking' || step === 'installing' || step === 'ready' ? step : null
 }
 
 /** Dit l'étape sur `<html>` ; `pending` retient le lancement sans rien montrer ; `null` y met fin. */
