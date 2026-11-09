@@ -1,5 +1,5 @@
 import { player } from '~/features/playback/player.store.ts'
-import { MARKS } from './launch.ts'
+import { LAUNCHED } from './launch.ts'
 import { harmlessFor } from './reload.ts'
 
 /**
@@ -20,7 +20,7 @@ export function harmless(): boolean {
  */
 export function reload(): void {
   try {
-    sessionStorage.removeItem(MARKS.launched)
+    sessionStorage.removeItem(LAUNCHED)
   } catch {
     // Sans stockage, pas de marque : rien à oublier.
   }
