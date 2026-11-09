@@ -86,16 +86,11 @@ let reclaiming: ReturnType<typeof setTimeout> | undefined
 
 /**
  * À chaque début de son : les boutons tout de suite, puis une fois encore un
- * instant plus tard (`RECLAIM_AFTER_MS`), avec ce qui s'affiche. L'écran verrouillé
- * de l'iPhone ignore les boutons déclarés avant que son son joue, et la pochette
- * aussi : posée au lancement, elle n'apparaissait qu'après une reprise (website#92).
+ * instant plus tard (`RECLAIM_AFTER_MS`). L'écran verrouillé de l'iPhone ignore
+ * ceux déclarés avant que son son joue.
  */
 export function reclaimSystemOnceHeard(): void {
   reclaimSystem()
   clearTimeout(reclaiming)
-  reclaiming = setTimeout(() => {
-    reclaimSystem()
-    const radio = player.state.radio
-    if (radio && supported() && navigator.mediaSession.metadata) showOnSystem(radio)
-  }, RECLAIM_AFTER_MS)
+  reclaiming = setTimeout(reclaimSystem, RECLAIM_AFTER_MS)
 }

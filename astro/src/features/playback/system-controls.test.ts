@@ -155,18 +155,6 @@ describe('the system controls while listening', () => {
     controls.detachElement()
   })
 
-  it('should show the cover again a moment after the sound starts, as the iPhone needs', async () => {
-    const { controls, client, audio, writes, shown } = await listening()
-    client.showTrackOnSystem({ title: 'Eternelle', cover: 'https://api.nina.example/covers/m1.jpg' })
-    audio.fire('playing')
-    writes.mockClear()
-
-    vi.advanceTimersByTime(RECLAIM_AFTER_MS)
-    expect(writes).toHaveBeenCalledOnce()
-    expect(shown()?.artwork?.[0]?.src).toBe('https://api.nina.example/covers/m1.jpg')
-    controls.detachElement()
-  })
-
   it('should hand the buttons again a moment after the sound starts, as the iPhone needs', async () => {
     const { controls, player, audio, handlers } = await listening()
     audio.fire('playing')

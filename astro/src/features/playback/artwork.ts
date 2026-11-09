@@ -34,9 +34,7 @@ export const COVER_ARTWORK_SIZES = ['96x96', '128x128', '192x192', '256x256', '3
  */
 export function getArtwork(filepath: unknown, origin: string): MediaImage[] {
   const defaultArtwork = `${origin}${DEFAULT_ARTWORK_FILENAME}`
-  const given = typeof filepath === 'string' && filepath ? filepath : defaultArtwork
-  // TEMPORAIRE (website#92) : essai de la miniature de l'API, retiré avant le merge.
-  const raw = given.replace(/(\/files\/images\/[^/]+\/)(?!thumb\/)/, '$1thumb/')
+  const raw = typeof filepath === 'string' && filepath ? filepath : defaultArtwork
   const src = raw.startsWith('/') ? `${origin}${raw}` : raw
   const isDefault = src === defaultArtwork
   const type = imageType(src)
