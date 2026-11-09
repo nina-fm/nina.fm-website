@@ -112,6 +112,14 @@ jobs:
             rm -f incoming/site.tgz
             test -f "releases/$RELEASE/index.html"
 
+            # Les fichiers de _astro/ des builds précédents restent servis 30 jours : une page
+            # ancienne, encore ouverte ou gardée par un service worker, charge encore ses
+            # scripts et ses images (website#87). Noms à hash : rien ne s'écrase. cp -a garde
+            # la date du build d'origine, sur laquelle l'élagage se règle.
+            mkdir -p "releases/$RELEASE/_astro"
+            if [ -d current/_astro ]; then cp -an current/_astro/. "releases/$RELEASE/_astro/"; fi
+            find "releases/$RELEASE/_astro" -type f -mtime +30 -delete
+
             printf '%s\n' "$COMPOSE" > deploy/docker-compose.yml
             echo "$COMPOSE_SHA256  deploy/docker-compose.yml" | sha256sum -c || { echo "❌ Compose corrompu en transit"; exit 1; }
             printf '%s\n' "$NGINX_CONF" > deploy/nginx.conf
@@ -159,3 +167,8 @@ jobs:
           served=$(curl -sf "$STAGING_URL/" | sha256sum | cut -d' ' -f1)
           [ "$served" = "$INDEX_SHA256" ] || { echo "❌ $STAGING_URL ne sert pas ce commit"; exit 1; }
           node astro/scripts/check-noindex.ts "$STAGING_URL"
+          # Pages et service worker toujours revalidés (nginx.conf, website#87).
+          for path in / /sw.js; do
+            curl -sfI "$STAGING_URL$path" | grep -qi '^cache-control: *no-cache' \
+              || { echo "❌ $path sans Cache-Control: no-cache"; exit 1; }
+          done

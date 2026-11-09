@@ -1,5 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions'
+import Launch from '~/features/install/Launch.astro'
+import { launchScript } from '~/features/install/launch.ts'
 import AudioPlayer from '~/features/playback/AudioPlayer.tsx'
 import Shell from '~/features/shell/Shell.tsx'
 import { bootScript } from '~/features/theme/boot.ts'
@@ -38,6 +40,9 @@ const image = new URL('/preview.png', SITE).href
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/x-icon" href="/favicon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    {/* Bloquant : l'app installée s'ouvre sur l'écran de lancement dès le premier
+        affichage (`install/launch.ts`). */}
+    <script is:inline set:html={launchScript()} />
     {/* Navigation sans recharger le document, donc sans couper le son. */}
     <ClientRouter />
   </head>
@@ -46,6 +51,8 @@ const image = new URL('/preview.png', SITE).href
     {/* Premier enfant du `<body>`, bloquant : thème, nuit et arc-en-ciel posés avant le
         premier affichage, d'après les cookies de l'auditeur (`theme/boot.ts`). */}
     <script is:inline set:html={bootScript()} />
+    {/* Après le thème, dont il prend le fond et la couleur. */}
+    <Launch />
     <slot />
     {/* La coquille, persistante comme le lecteur : calque d'autoplay, toasts, débogueur,
         arc-en-ciel, et ce qui suit la page (classes du `<body>`, titre, clavier). */}

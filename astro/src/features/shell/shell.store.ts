@@ -1,4 +1,5 @@
 import { type Accessor, onCleanup } from 'solid-js'
+import { landLaunch } from '~/features/install/launch.client.ts'
 import { autoplay } from '~/features/playback/autoplay.store.ts'
 import { player } from '~/features/playback/player.store.ts'
 import { followDaylight } from '~/features/theme/daylight.store.ts'
@@ -16,7 +17,8 @@ import { rotateTabTitle } from './tab-title.client.ts'
 /**
  * L'îlot de la coquille, monté une fois et persistant (`BaseLayout.astro`) : il lit
  * les préférences et branche tout ce qui suit la page (classes du `<body>`, heure,
- * plein écran, toasts, titre, clavier, débogueur). `mounted` : ce que ses composants
+ * plein écran, toasts, titre, clavier, débogueur), et met fin à l'écran de lancement
+ * de l'app installée. `mounted`: ce que ses composants
  * ne dessinent qu'une fois le navigateur lu.
  */
 export function useShell(): { mounted: Accessor<boolean>; listening: Accessor<ListeningFlags> } {
@@ -26,6 +28,7 @@ export function useShell(): { mounted: Accessor<boolean>; listening: Accessor<Li
     followNotices()
     followDebug()
     closeDetailsOffMixtape()
+    landLaunch()
     onCleanup(() => stops.forEach((stop) => stop()))
   })
   const listening = () =>
