@@ -6,6 +6,7 @@ import { type PlayingRadio, isListening } from './player.ts'
 import { armWatchdog, establish, reconnectionState, retryNow, watchStall } from './recovery.client.ts'
 import { audio, isHolding, release, setElement } from './source.client.ts'
 import { answerSystem, reclaimSystemOnceHeard, showOnSystem } from './system-controls.client.ts'
+import { startTrace } from './trace.client.ts'
 
 /**
  * Branchement de l'état du lecteur sur l'unique élément <audio> : ses événements,
@@ -24,6 +25,7 @@ let listeners: AbortController | null = null
 
 /** Appelé une fois par l'îlot du lecteur, quand l'élément est monté. */
 export function attachElement(element: HTMLAudioElement): void {
+  startTrace(element)
   setElement(element)
   listeners = new AbortController()
   const { signal } = listeners
