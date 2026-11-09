@@ -23,3 +23,16 @@ export const PEAK_IMAGE_VARIABLES: Record<string, string> = {
   '--peak-equalizer-playing': `url(${equalizer.src})`,
   '--peak-equalizer-playing-night': `url(${equalizerNight.src})`,
 }
+
+/**
+ * La même image, écrite autrement : `url(x)` ↔ `url("x")`. Safari ne redemande pas
+ * une image de fond dont le téléchargement a échoué, hors ligne par exemple, tant que
+ * la valeur reste la même ; réécrite, elle est redemandée, et une image déjà chargée
+ * revient du cache mémoire sans rien télécharger (website#92).
+ */
+export function rewritten(value: string): string {
+  const quoted = /^url\("(.*)"\)$/.exec(value)
+  if (quoted) return `url(${quoted[1]})`
+  const bare = /^url\((.*)\)$/.exec(value)
+  return bare ? `url("${bare[1]}")` : value
+}

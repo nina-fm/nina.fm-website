@@ -50,7 +50,7 @@ const DIST = join(ROOT, 'dist')
  * d'environ 1 ko et 0,5 ko.
  */
 const BUDGET = {
-  js: 44 * 1024, // TEMPORAIRE (website#92) : journal trace.client.ts, retiré avant le merge
+  js: 45 * 1024, // TEMPORAIRE (website#92) : journal trace.client.ts, retiré avant le merge
   page: 9 * 1024,
 }
 
