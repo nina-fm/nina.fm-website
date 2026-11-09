@@ -43,10 +43,15 @@ const DIST = join(ROOT, 'dist')
  * platine ajoutant 4,9 ko, dont 1,2 pour le tracé du bras. Les deux scènes sont dans la
  * page pour basculer de thème sans couper le son ; le logo en traits est partagé entre
  * elles. `page` inchangée (7,8 ko) : la scène Vinyl n'a rien dans le HTML du build.
+ *
+ * Relevés le 2026-11-09 avec la mise à jour à l'ouverture (website#87) : `js` 41,9 ko,
+ * la vérification d'une nouvelle version et son rechargement ajoutant 2,1 ko ; `page`
+ * 8,4 ko, avec l'écran de lancement (logo en traits) et son script d'amorce. Marge
+ * d'environ 1 ko et 0,5 ko.
  */
 const BUDGET = {
-  js: 41 * 1024,
-  page: 8.5 * 1024,
+  js: 43 * 1024,
+  page: 9 * 1024,
 }
 
 const gzipped = (buffer: Buffer) => gzipSync(buffer, { level: 9 }).length

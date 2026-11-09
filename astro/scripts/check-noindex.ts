@@ -30,7 +30,8 @@ async function checkDist(): Promise<string[]> {
 
 async function checkOnline(origin: string): Promise<string[]> {
   const problems: string[] = []
-  for (const path of ['/', '/robots.txt', '/manifest.webmanifest']) {
+  // Les location de nginx.conf qui posent leurs en-têtes doivent répéter celui-ci.
+  for (const path of ['/', '/robots.txt', '/manifest.webmanifest', '/sw.js']) {
     const response = await fetch(new URL(path, origin), { redirect: 'manual' })
     const header = headerProblem(response.headers.get('x-robots-tag'))
     if (header) problems.push(`${path} : ${header}`)

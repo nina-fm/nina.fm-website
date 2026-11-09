@@ -1,0 +1,84 @@
+/* L'écran de lancement (Launch.astro), sur le fond et la couleur du thème actif, posés
+   sur le `<body>` avant le premier affichage (theme/boot.ts). Caché par défaut : sans
+   script, la page se montre. */
+
+.launch {
+  position: fixed;
+  inset: 0;
+  /* Devant tout, toasts compris (Toaster.tsx). */
+  z-index: 2147483647;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 24px;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  /* Il se fond en partant ; il apparaît d'un coup, dès le premier affichage. */
+  transition:
+    opacity 0.3s ease,
+    visibility 0s 0.3s;
+}
+
+/* Un lancement que le script du `<head>` a décidé, ou une vérification qui se montre
+   (au retour au premier plan, au-delà de 300 ms). */
+:root[data-launch] .launch,
+:root[data-update='checking'] .launch,
+:root[data-update='installing'] .launch {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: none;
+}
+
+.launch-logo {
+  width: 160px;
+}
+
+/* Chaque lettre se trace puis s'efface, tant que l'écran est là. */
+.launch-logo .line {
+  stroke-dasharray: 260 260;
+  stroke-dashoffset: 260;
+  animation: launch-draw 1.4s ease-in-out infinite alternate;
+}
+
+.launch-logo .letter-i,
+.launch-logo .letter-i-dot {
+  animation-delay: 0.1s;
+}
+.launch-logo .letter-n2 {
+  animation-delay: 0.2s;
+}
+.launch-logo .letter-a,
+.launch-logo .letter-a-bar {
+  animation-delay: 0.3s;
+}
+.launch-logo .sub-word {
+  animation-delay: 0.4s;
+}
+
+@keyframes launch-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launch-logo .line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+.launch-status {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+:root[data-update='installing'] .launch-status {
+  opacity: 0.6;
+}

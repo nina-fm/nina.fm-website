@@ -1,0 +1,14 @@
+---
+import LogoStroke from '~/shared/ui/LogoStroke.tsx'
+import './launch.css'
+---
+
+{/* L'écran de lancement de l'app installée (website#87) : le logo qui se dessine sur le
+    fond du thème actif, et « Mise à jour… » pendant l'installation d'une version.
+    Statique, montré par la feuille d'après `data-launch` et `data-update` sur `<html>`
+    (`launch.ts`, `update-step.client.ts`) : il ne dépend d'aucun îlot, et sans script
+    il reste caché. Persistant : le routeur ne le rejoue pas à chaque navigation. */}
+<div class="launch" data-testid="launch" aria-hidden="true" transition:persist="launch">
+  <LogoStroke class="launch-logo" />
+  <p class="launch-status">Mise à jour…</p>
+</div>

@@ -58,6 +58,14 @@ Un seul lecteur par page : l'état de `features/playback/` est de module, partag
 `install/same-build.client.ts` recharge la page quand un nouveau build changerait de module.
 `play()` s'appelle dans la tâche même du geste (iOS), jamais depuis un effet.
 
+## App installée
+
+À chaque ouverture, l'app installée vérifie s'il existe une nouvelle version, sous
+l'écran de lancement (`install/launch.ts`, `Launch.astro`), et se recharge dessus
+seulement si aucune écoute n'est en jeu (`install/register.client.ts`, repris
+d'ohmyradios). L'écran ne reste que le temps nécessaire : coquille montée, vérification
+finie.
+
 ## Dépendances
 
 - `pnpm.overrides` épingle `@emnapi/runtime` en 1.11 : la 2.0 bêta, tirée par la liaison
@@ -68,3 +76,5 @@ Un seul lecteur par page : l'état de `features/playback/` est de module, partag
 `deploy-staging.yml`, sur push `main` touchant `astro/` : validation, build sur le runner,
 copie dans `releases/` sur le serveur, bascule du lien `current`, servi par
 `deploy/docker-compose.yml` (`nginx:1.30-alpine`, projet Compose `nina-website-staging`).
+Pages et `sw.js` en `no-cache` ; chaque release reprend les fichiers `_astro/` des builds
+des 30 derniers jours, pour une page ancienne encore ouverte.
