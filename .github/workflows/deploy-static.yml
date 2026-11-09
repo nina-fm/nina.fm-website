@@ -11,9 +11,7 @@ name: Deploy Static
 # ses images (website#87). Une image Docker ne contiendrait que son build.
 #
 # Contrôles : sur le serveur, le conteneur sert ce commit avec les bons en-têtes ; puis
-# en ligne, à travers le reverse proxy, si l'URL publique sert ce commit. `must-serve`
-# rend ce dernier contrôle obligatoire : faux pour la prod tant que www sert le Nuxt
-# (bascule par nina.fm-webserver, website#80).
+# en ligne, à travers le reverse proxy (nina.fm-webserver).
 
 on:
   workflow_call:
@@ -30,10 +28,6 @@ on:
         description: 'Sous-dossier de base-dir monté en lecture seule dans le conteneur (releases/, current), vide pour base-dir'
         type: string
         default: ''
-      compose-file:
-        description: 'Nom du compose dans base-dir/deploy/'
-        type: string
-        default: docker-compose.yml
       container:
         description: 'container_name du compose'
         type: string
@@ -50,10 +44,6 @@ on:
         description: 'noindex ou indexable'
         type: string
         required: true
-      must-serve:
-        description: "Échouer si l'URL publique ne sert pas ce commit"
-        type: boolean
-        default: true
     secrets:
       SERVER_HOST:
         required: true
@@ -124,7 +114,6 @@ jobs:
         env:
           BASE: ${{ inputs.base-dir }}
           SUBDIR: ${{ inputs.site-subdir }}
-          COMPOSE_FILE_NAME: ${{ inputs.compose-file }}
           CONTAINER: ${{ inputs.container }}
           PORT: ${{ inputs.port }}
           INDEXING: ${{ inputs.indexing }}
@@ -141,7 +130,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 5m
-          envs: BASE,SUBDIR,COMPOSE_FILE_NAME,CONTAINER,PORT,INDEXING,RELEASE,SITE_SHA256,INDEX_SHA256,COMPOSE,COMPOSE_SHA256,NGINX_CONF,NGINX_CONF_SHA256
+          envs: BASE,SUBDIR,CONTAINER,PORT,INDEXING,RELEASE,SITE_SHA256,INDEX_SHA256,COMPOSE,COMPOSE_SHA256,NGINX_CONF,NGINX_CONF_SHA256
           script: |
             set -eu
             SITE="$BASE${SUBDIR:+/$SUBDIR}"
@@ -161,8 +150,8 @@ jobs:
             find "releases/$RELEASE/_astro" -type f -mtime +30 -delete
 
             cd "$BASE/deploy"
-            printf '%s\n' "$COMPOSE" > "$COMPOSE_FILE_NAME"
-            echo "$COMPOSE_SHA256  $COMPOSE_FILE_NAME" | sha256sum -c || { echo "❌ Compose corrompu en transit"; exit 1; }
+            printf '%s\n' "$COMPOSE" > docker-compose.yml
+            echo "$COMPOSE_SHA256  docker-compose.yml" | sha256sum -c || { echo "❌ Compose corrompu en transit"; exit 1; }
             printf '%s\n' "$NGINX_CONF" > nginx.conf
             echo "$NGINX_CONF_SHA256  nginx.conf" | sha256sum -c || { echo "❌ Conf nginx corrompue en transit"; exit 1; }
 
@@ -172,7 +161,7 @@ jobs:
             mv -Tf current.tmp current
 
             cd "$BASE/deploy"
-            docker compose -f "$COMPOSE_FILE_NAME" up -d
+            docker compose up -d
             # La conf est montée en fichier : la relire sans recréer le conteneur.
             docker exec "$CONTAINER" nginx -t
             docker exec "$CONTAINER" nginx -s reload
@@ -219,14 +208,9 @@ jobs:
         env:
           URL: ${{ inputs.public-url }}
           INDEXING: ${{ inputs.indexing }}
-          MUST_SERVE: ${{ inputs.must-serve }}
         run: |
           served=$(curl -sf "$URL/" | sha256sum | cut -d' ' -f1)
-          if [ "$served" != "$INDEX_SHA256" ]; then
-            if [ "$MUST_SERVE" = true ]; then echo "❌ $URL ne sert pas ce commit"; exit 1; fi
-            echo "::notice::$URL ne sert pas encore ce site : contrôle en ligne sauté."
-            exit 0
-          fi
+          [ "$served" = "$INDEX_SHA256" ] || { echo "❌ $URL ne sert pas ce commit"; exit 1; }
           node scripts/check-indexing.ts "$INDEXING" "$URL"
           # Pages et service worker toujours revalidés (nginx.<env>.conf, website#87).
           for path in / /sw.js; do

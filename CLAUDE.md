@@ -93,14 +93,12 @@ précédente, gardée.
 
 - Staging : https://staging.nina.fm, `/var/nina/website-staging`, `nina-website-staging`
   sur le port 3001, fermé aux moteurs.
-- Prod : `/var/nina/website` (site servi dans `site/`, compose `deploy/docker-compose.astro.yml`
-  à côté de celui du Nuxt), `nina-website-astro` sur le port 3003, indexable. Seul
-  `deploy.yml` versionne (changesets, tag, GitHub Release).
+- Prod : https://www.nina.fm, `/var/nina/website` (site servi dans `site/`, seul monté),
+  `nina-website-astro` sur le port 3003, indexable. Seul `deploy.yml` versionne
+  (changesets, tag, GitHub Release).
 
-Le Nuxt tourne encore dans `nina-website` (port 3000) jusqu'à la fin de #80 : www.nina.fm
-bascule sur Astro par le reverse proxy (nina.fm-webserver). Tant que www sert le Nuxt, le
-contrôle en ligne de la prod est sauté (`must-serve: false` dans `deploy.yml`) ; à l'arrêt du
-Nuxt, il passe à `true`, et le compose Nuxt et son `.env` quittent `/var/nina/website`.
+Chaque déploiement vérifie le conteneur sur le serveur, puis le site en ligne à travers le
+reverse proxy (nina.fm-webserver) : page du commit, `no-cache`, indexation attendue.
 
 ## Plan
 
