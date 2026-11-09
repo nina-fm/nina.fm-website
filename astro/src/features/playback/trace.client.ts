@@ -1,3 +1,4 @@
+import { keepAwakeState } from './keep-awake.client.ts'
 import { player } from './player.store.ts'
 import { isHolding } from './source.client.ts'
 
@@ -49,6 +50,7 @@ function snapshot(element: HTMLAudioElement): string {
     `err=${element.error?.code ?? '-'}`,
     `online=${navigator.onLine}`,
     `vis=${document.visibilityState}`,
+    `wa=${keepAwakeState()}`,
     `ms=${'mediaSession' in navigator ? navigator.mediaSession.playbackState : '-'}`,
   ].join(' ')
 }

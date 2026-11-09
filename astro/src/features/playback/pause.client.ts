@@ -1,5 +1,6 @@
 import { isIos } from '~/shared/device.ts'
 import { IMPOSED_PAUSE_HOLD_MS, PAUSE_AWAKE_MS } from './controls.ts'
+import { stopKeepAwake } from './keep-awake.client.ts'
 import { player } from './player.store.ts'
 import { isListening } from './player.ts'
 import { resetRecovery } from './recovery.client.ts'
@@ -50,6 +51,7 @@ export function pause({ imposed = false } = {}): void {
   // Une écoute abandonnée n'a rien à mettre en pause : son message reste affiché.
   if (!isListening(player.state.status)) return
   pauseImposed = imposed
+  stopKeepAwake()
   resetRecovery()
   clearPause()
   player.pause()

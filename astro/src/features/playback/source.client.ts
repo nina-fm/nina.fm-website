@@ -1,5 +1,6 @@
 import { player } from './player.store.ts'
 import type { PlayingRadio } from './player.ts'
+import { startKeepAwake, stopKeepAwake } from './keep-awake.client.ts'
 import { isSilence, silenceUrl } from './silence.client.ts'
 import { clearSystem, setSystemState, showOnSystem } from './system-controls.client.ts'
 
@@ -47,6 +48,7 @@ export function load(radio: PlayingRadio): Promise<void> | undefined {
  */
 export function hold(): void {
   if (!element || isHolding()) return
+  startKeepAwake()
   attachSilence()
   // Refusé seulement là où jouer hors geste l'est : la page peut alors être
   // suspendue, comme sans lui, et rien d'autre ne change.
@@ -69,6 +71,7 @@ export function attachSilence(): void {
 
 /** Détache le flux de l'élément et vide les contrôles système. */
 export function release(): void {
+  stopKeepAwake()
   element?.pause()
   detachSource()
   clearSystem()
