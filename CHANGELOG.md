@@ -1,5 +1,11 @@
 # nina.fm-website
 
+## 3.0.1
+
+### Patch Changes
+
+- 2109358: fix(playback): montrer le logo Nina.fm sur l'écran verrouillé quand rien ne donne de pochette (morceau seul)
+
 ## 3.0.0
 
 ### Major Changes
