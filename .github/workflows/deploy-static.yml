@@ -32,10 +32,6 @@ on:
         description: 'container_name du compose'
         type: string
         required: true
-      replaces:
-        description: "Conteneur d'un autre projet Compose à retirer juste avant de lancer celui-ci (renommage), vide sinon"
-        type: string
-        default: ''
       port:
         description: 'Port publié sur 127.0.0.1 par le compose'
         type: number
@@ -119,7 +115,6 @@ jobs:
           BASE: ${{ inputs.base-dir }}
           SUBDIR: ${{ inputs.site-subdir }}
           CONTAINER: ${{ inputs.container }}
-          REPLACES: ${{ inputs.replaces }}
           PORT: ${{ inputs.port }}
           INDEXING: ${{ inputs.indexing }}
           # Unique par run : redéployer le même commit ne réécrit pas la version servie.
@@ -135,7 +130,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 5m
-          envs: BASE,SUBDIR,CONTAINER,REPLACES,PORT,INDEXING,RELEASE,SITE_SHA256,INDEX_SHA256,COMPOSE,COMPOSE_SHA256,NGINX_CONF,NGINX_CONF_SHA256
+          envs: BASE,SUBDIR,CONTAINER,PORT,INDEXING,RELEASE,SITE_SHA256,INDEX_SHA256,COMPOSE,COMPOSE_SHA256,NGINX_CONF,NGINX_CONF_SHA256
           script: |
             set -eu
             SITE="$BASE${SUBDIR:+/$SUBDIR}"
@@ -166,12 +161,6 @@ jobs:
             mv -Tf current.tmp current
 
             cd "$BASE/deploy"
-            # Un conteneur renommé change de projet Compose : l'ancien garde ses ports tant
-            # qu'il tourne. Retiré au dernier moment, le site ne répond pas une à deux secondes.
-            if [ -n "$REPLACES" ] && docker inspect "$REPLACES" >/dev/null 2>&1; then
-              docker rm -f "$REPLACES"
-              echo "🔁 $REPLACES remplacé par $CONTAINER"
-            fi
             docker compose up -d
             # La conf est montée en fichier : la relire sans recréer le conteneur.
             docker exec "$CONTAINER" nginx -t
