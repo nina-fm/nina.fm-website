@@ -94,7 +94,7 @@ précédente, gardée.
 - Staging : https://staging.nina.fm, `/var/nina/website-staging`, `nina-website-staging`
   sur le port 3001, fermé aux moteurs.
 - Prod : https://www.nina.fm, `/var/nina/website` (site servi dans `site/`, seul monté),
-  `nina-website-astro` sur le port 3003, indexable. Seul `deploy.yml` versionne
+  `nina-website` sur le port 3000, indexable. Seul `deploy.yml` versionne
   (changesets, tag, GitHub Release).
 
 Chaque déploiement vérifie le conteneur sur le serveur, puis le site en ligne à travers le

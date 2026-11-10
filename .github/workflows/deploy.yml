@@ -5,8 +5,8 @@ name: Deploy Prod
 # que le merge en squash produit sur `main` un commit jamais testé tel quel.
 #
 # Le site statique est déployé par `deploy-static.yml`, comme le staging, dans
-# /var/nina/website/site, servi par le conteneur nina-website-astro sur le port 3003,
-# vers lequel le reverse proxy envoie www.nina.fm (nina.fm-webserver).
+# /var/nina/website/site, servi par le conteneur nina-website sur le port 3000, vers
+# lequel le reverse proxy envoie www.nina.fm (nina.fm-webserver).
 
 on:
   push:
@@ -82,36 +82,8 @@ jobs:
           VERSION: ${{ needs.versioning.outputs.version }}
         run: echo "::warning::Release $VERSION non créée — le tag est publié, la release se recrée à la main"
 
-  # Le Nuxt, remplacé par Astro (website#80) : conteneur, image, compose et .env.
-  # Sans effet une fois fait ; à retirer au prochain passage dans ce workflow.
-  retire-nuxt:
-    needs: versioning
-    runs-on: ubuntu-24.04
-    permissions: {}
-    steps:
-      - name: Retirer le Nuxt du serveur
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 2m
-          script: |
-            set -eu
-            cd /var/nina/website
-            if docker inspect nina-website >/dev/null 2>&1; then
-              docker stop nina-website
-              docker rm nina-website
-              echo "🗑️ Conteneur nina-website retiré"
-            fi
-            docker images -q ghcr.io/nina-fm/nina.fm-website | sort -u | xargs -r docker image rm
-            # Le compose du Nuxt seul, reconnu à son image : celui d'Astro prend sa place.
-            if grep -qs 'DOCKER_IMAGE' deploy/docker-compose.yml; then rm deploy/docker-compose.yml; fi
-            rm -f .env deploy/docker-compose.astro.yml
-            ls -A . deploy
-
   deploy:
-    needs: retire-nuxt
+    needs: versioning
     permissions:
       contents: read
     uses: ./.github/workflows/deploy-static.yml
@@ -119,8 +91,10 @@ jobs:
       environment: production
       base-dir: /var/nina/website
       site-subdir: site
-      container: nina-website-astro
-      port: 3003
+      container: nina-website
+      # Renommé après la bascule (website#80) : retiré juste avant le lancement.
+      replaces: nina-website-astro
+      port: 3000
       public-url: https://www.nina.fm
       indexing: indexable
     secrets:

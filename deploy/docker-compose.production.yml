@@ -9,14 +9,14 @@
 
 # Nom de projet explicite : sans lui, Compose le tire du dossier `deploy`, celui de
 # plusieurs stacks du serveur, qui se verraient l'une l'autre en orphelines ; un
-# `--remove-orphans` supprimerait l'autre conteneur. Gardé tel quel depuis la bascule :
-# le changer recréerait le conteneur.
-name: nina-website-astro
+# `--remove-orphans` supprimerait l'autre conteneur. Le changer change de conteneur
+# (`replaces` dans deploy.yml).
+name: nina-website
 
 services:
-  website-astro:
+  website:
     image: nginx:1.30-alpine
-    container_name: nina-website-astro
+    container_name: nina-website
     restart: unless-stopped
     labels:
       - diun.enable=false
@@ -31,8 +31,10 @@ services:
     volumes:
       - /var/nina/website/site:/srv:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    # 3002 est nina-faceb : www.nina.fm.conf déclare website_astro sur 3003.
+    # 3000, celui de l'ancien site. 3003, celui de la bascule (website#80), le temps que
+    # www.nina.fm.conf passe sur 3000 ; retiré ensuite.
     ports:
+      - '127.0.0.1:3000:80'
       - '127.0.0.1:3003:80'
     deploy:
       resources:
