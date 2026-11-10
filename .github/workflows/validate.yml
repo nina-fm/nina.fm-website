@@ -1,14 +1,14 @@
 name: Validate
 
 # Configuration qualité du repo, définie **une seule fois** et appelée par `ci.yml`
-# (pull requests) comme par `deploy.yml` et `deploy-staging.yml` (garde avant
-# déploiement). Deux jeux d'entrées séparés finiraient par diverger et produiraient des
+# (pull requests) comme par `deploy.yml` (garde avant déploiement). Deux jeux d'entrées séparés finiraient par diverger et produiraient des
 # verdicts contradictoires entre une PR et `main`.
 #
 # `quality` : lint, type-check, tests et couverture, dans `node-validate.yml` du workspace,
 # comme `nina.fm-api` et `nina.fm-faceb`.
 # `build` : ce qui est propre au site statique — format, build, budget de performance,
-# indexation attendue, et `dist/` en artefact pour un déploiement.
+# indexation attendue, et `dist/` en artefact pour un déploiement. Toujours le build de
+# la prod, indexable : depuis le retrait du staging, aucun autre ne part en ligne.
 #
 # Seul `CODECOV_TOKEN` est accepté, et transmis nommément : pas de `secrets: inherit`,
 # qui ferait descendre jusqu'ici les secrets de déploiement. L'envoi Codecov est gardé
@@ -17,10 +17,6 @@ name: Validate
 on:
   workflow_call:
     inputs:
-      site-env:
-        description: 'PUBLIC_SITE_ENV du build : production (indexable) ou staging (fermé aux moteurs)'
-        type: string
-        default: staging
       upload-dist:
         description: 'Publier dist/ en artefact pour un déploiement'
         type: boolean
@@ -48,16 +44,6 @@ jobs:
     env:
       HUSKY: '0'
     steps:
-      - name: Vérifier l'environnement demandé
-        env:
-          SITE_ENV: ${{ inputs.site-env }}
-        run: |
-          case "$SITE_ENV" in
-            production) echo "INDEXING=indexable" >> "$GITHUB_ENV" ;;
-            staging) echo "INDEXING=noindex" >> "$GITHUB_ENV" ;;
-            *) echo "❌ site-env inconnu : $SITE_ENV"; exit 1 ;;
-          esac
-
       - name: Checkout
         uses: actions/checkout@v6
         with:
@@ -78,10 +64,9 @@ jobs:
       - name: Format
         run: pnpm format:check
 
-      # Même flux et même API pour la prod et le staging : les variables du repo.
-      - name: Build (${{ inputs.site-env }})
+      - name: Build
         env:
-          PUBLIC_SITE_ENV: ${{ inputs.site-env }}
+          PUBLIC_SITE_ENV: production
           PUBLIC_AUDIO_STREAM_URL: ${{ vars.PUBLIC_AUDIO_STREAM_URL }}
           PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
           PUBLIC_API_STREAM_ENDPOINT: ${{ vars.PUBLIC_API_STREAM_ENDPOINT }}
@@ -90,15 +75,15 @@ jobs:
       - name: Budget de performance
         run: pnpm perf:budget
 
-      # Un staging indexable, ou une prod qui ne l'est pas, ne part pas.
+      # Une prod qui ne serait pas indexable ne part pas.
       - name: Indexation du build
-        run: pnpm check:indexing "$INDEXING"
+        run: pnpm check:indexing indexable
 
       - name: Publier dist/
         if: inputs.upload-dist
         uses: actions/upload-artifact@v7
         with:
-          name: dist-${{ inputs.site-env }}
+          name: dist-production
           path: dist/
           retention-days: 3
           if-no-files-found: error

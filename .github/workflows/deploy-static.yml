@@ -1,7 +1,6 @@
 name: Deploy Static
 
-# Déploiement du site statique, commun au staging (`deploy-staging.yml`) et à la prod
-# (`deploy.yml`). Pas d'image : le `dist/` construit par `validate.yml` est copié sur le
+# Déploiement du site statique, appelé par `deploy.yml`. Pas d'image : le `dist/` construit par `validate.yml` est copié sur le
 # serveur dans <site>/releases/<sha>-<run>, puis servi par un conteneur nginx:alpine
 # (deploy/docker-compose.<env>.yml) une fois le lien `current` basculé. Retour arrière :
 # rebasculer `current` sur la release précédente, gardée.
@@ -17,7 +16,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: "staging ou production : choisit l'artefact dist-<env> et les fichiers deploy/*.<env>.*"
+        description: "production : choisit l'artefact dist-<env> et les fichiers deploy/*.<env>.*"
         type: string
         required: true
       base-dir:

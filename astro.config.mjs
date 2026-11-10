@@ -11,7 +11,7 @@ import { SITE } from './src/shared/site/site.ts'
 const missing = missingConfig({ ...loadEnv(process.env.NODE_ENV ?? '', process.cwd(), 'PUBLIC_'), ...process.env })
 if (missing.length > 0) throw new Error(`Variables manquantes pour ce build : ${missing.join(', ')}`)
 
-// Sortie entièrement statique, servie par nginx (staging, puis prod en #80).
+// Sortie entièrement statique, servie par nginx.
 export default defineConfig({
   output: 'static',
   site: SITE,
