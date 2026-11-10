@@ -6,7 +6,7 @@ const nina: PlayingRadio = {
   id: 'nina',
   name: 'Nina.fm',
   streamUrl: 'https://flux.example/nina.mp3',
-  imageUrl: '/artwork.png',
+  imageUrl: '/maskable_icon_x512.png',
 }
 
 const ORIGIN = 'https://www.nina.example'
@@ -29,7 +29,11 @@ describe('systemMetadata', () => {
       title: 'Nina.fm',
       artist: 'Nina.fm',
       album: 'Nina.fm',
-      artwork: [{ src: `${ORIGIN}/artwork.png`, sizes: '1024x1024', type: 'image/png' }],
+      artwork: [96, 128, 192, 384, 512].map((size) => ({
+        src: `${ORIGIN}/maskable_icon_x${size}.png`,
+        sizes: `${size}x${size}`,
+        type: 'image/png',
+      })),
     })
   })
 
@@ -43,6 +47,13 @@ describe('systemMetadata', () => {
     expect([shown.title, shown.artist, shown.album]).toEqual(['Sous les tropiques', 'Alice & Bob', 'Nina.fm'])
     expect(shown.artwork).toHaveLength(6)
     expect(shown.artwork?.every((image) => image.src === 'https://api.nina.example/covers/m1.jpg')).toBe(true)
+  })
+
+  it('should show the Nina.fm logo when a track alone is on air, without cover', () => {
+    const shown = systemMetadata(nina, ORIGIN, { title: 'Ta Bom', artist: 'Chinese Man' })
+
+    expect(shown.artwork?.map((image) => image.src)).toContain(`${ORIGIN}/maskable_icon_x512.png`)
+    expect(shown.artwork?.every((image) => image.src.includes('/maskable_icon_x'))).toBe(true)
   })
 
   it('should fall back on Nina.fm as artist when the mixtape has no DJ', () => {

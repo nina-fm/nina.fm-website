@@ -1,25 +1,38 @@
+import { existsSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { COVER_ARTWORK_SIZES, DEFAULT_ARTWORK_SIZE, getArtwork, thumbnailOf } from './artwork.ts'
+import {
+  COVER_ARTWORK_SIZES,
+  DEFAULT_ARTWORK_FILENAME,
+  DEFAULT_ARTWORK_SIZES,
+  getArtwork,
+  thumbnailOf,
+} from './artwork.ts'
 
 const ORIGIN = 'https://nina.fm'
-const DEFAULT_SRC = `${ORIGIN}/artwork.png`
+
+/** Le logo Nina.fm, une entrée par taille réelle d'icône. */
+const LOGO = DEFAULT_ARTWORK_SIZES.map((size) => ({
+  src: `${ORIGIN}/maskable_icon_x${size}.png`,
+  sizes: `${size}x${size}`,
+  type: 'image/png',
+}))
 
 describe('getArtwork', () => {
-  it('should return default artwork when filepath is undefined', () => {
-    const result = getArtwork(undefined, ORIGIN)
-    expect(result).toHaveLength(1)
-    expect(result[0]?.src).toBe(DEFAULT_SRC)
-    expect(result[0]?.sizes).toBe(DEFAULT_ARTWORK_SIZE)
+  it('should return the Nina.fm logo in every real size when filepath is undefined', () => {
+    expect(getArtwork(undefined, ORIGIN)).toEqual(LOGO)
   })
 
-  it('should return default artwork when filepath is empty string', () => {
-    const result = getArtwork('', ORIGIN)
-    expect(result[0]?.src).toBe(DEFAULT_SRC)
+  it('should return the Nina.fm logo when filepath is empty or not a string', () => {
+    expect(getArtwork('', ORIGIN)).toEqual(LOGO)
+    expect(getArtwork(null, ORIGIN)).toEqual(LOGO)
   })
 
-  it('should return default artwork when filepath is not a string', () => {
-    const result = getArtwork(null, ORIGIN)
-    expect(result[0]?.src).toBe(DEFAULT_SRC)
+  it('should return the Nina.fm logo when given the default artwork of a radio', () => {
+    expect(getArtwork(DEFAULT_ARTWORK_FILENAME, ORIGIN)).toEqual(LOGO)
+  })
+
+  it('should point only to icons that exist in public/', () => {
+    for (const size of DEFAULT_ARTWORK_SIZES) expect(existsSync(`public/maskable_icon_x${size}.png`)).toBe(true)
   })
 
   it('should return multi-size artwork when cover URL is valid', () => {
@@ -77,7 +90,7 @@ describe('thumbnailOf', () => {
   })
 
   it('should find nothing when the URL is not an API image, or already a thumbnail', () => {
-    expect(thumbnailOf('https://nina.fm/artwork.png')).toBeNull()
+    expect(thumbnailOf('https://nina.fm/maskable_icon_x512.png')).toBeNull()
     expect(thumbnailOf('https://api.nina.fm/files/images/covers/thumb/a1-mix.jpeg')).toBeNull()
   })
 })

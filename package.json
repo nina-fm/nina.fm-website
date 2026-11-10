@@ -24,7 +24,7 @@
     "version:check": "changeset status"
   },
   "lint-staged": {
-    "*.{ts,tsx,astro,js,mjs,css,json,yml}": [
+    "*.{ts,tsx,astro,js,mjs,css,json,yml,md}": [
       "prettier --write"
     ],
     "*.{ts,tsx,astro,js}": [
