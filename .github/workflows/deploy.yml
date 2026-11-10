@@ -92,8 +92,6 @@ jobs:
       base-dir: /var/nina/website
       site-subdir: site
       container: nina-website
-      # Renommé après la bascule (website#80) : retiré juste avant le lancement.
-      replaces: nina-website-astro
       port: 3000
       public-url: https://www.nina.fm
       indexing: indexable
