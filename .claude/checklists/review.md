@@ -16,5 +16,5 @@ vivent dans la commande — ne pas les recopier ici.
 
 #### Indexation et déploiement (`deploy/**`, `.github/workflows/**`, `src/shared/site/**`)
 
-- [ ] Un staging reste fermé aux moteurs, la prod ouverte : aucun `X-Robots-Tag` dans `nginx.production.conf`, et chaque `location` de `nginx.staging.conf` qui pose un en-tête répète le sien
+- [ ] La prod reste ouverte aux moteurs : aucun `X-Robots-Tag` dans `nginx.production.conf` ; tout build autre que la prod reste fermé (`src/shared/site/indexing.ts`)
 - [ ] Pages et `sw.js` en `no-cache`, rien sur `/_astro/` : le cache long est au reverse proxy

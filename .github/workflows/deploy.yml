@@ -4,7 +4,7 @@ name: Deploy Prod
 # dans `ci.yml`, qui tourne sans secret ni droit d'écriture ; elle est rejouée ici parce
 # que le merge en squash produit sur `main` un commit jamais testé tel quel.
 #
-# Le site statique est déployé par `deploy-static.yml`, comme le staging, dans
+# Le site statique est déployé par `deploy-static.yml`, dans
 # /var/nina/website/site, servi par le conteneur nina-website sur le port 3000, vers
 # lequel le reverse proxy envoie www.nina.fm (nina.fm-webserver).
 
@@ -31,7 +31,6 @@ jobs:
       contents: read
     uses: ./.github/workflows/validate.yml
     with:
-      site-env: production
       upload-dist: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

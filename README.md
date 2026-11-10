@@ -44,5 +44,5 @@ est indexable.
 
 ## Déploiement
 
-À chaque push sur `main` : https://staging.nina.fm (`deploy-staging.yml`) et la prod
-(`deploy.yml`), par `deploy-static.yml`. Détails dans `CLAUDE.md`.
+À chaque push sur `main` : la prod, https://www.nina.fm (`deploy.yml`, par
+`deploy-static.yml`). Détails dans `CLAUDE.md`.

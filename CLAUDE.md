@@ -23,13 +23,15 @@ détaille l'architecture.
 - `nom.build.ts` : build seulement (`astro:*`, `node:*`).
 - `Nom.tsx` : composant, rendu seul ; pas de `createSignal`, `createEffect`, `onMount`…
 
-## Jamais un staging indexable
+## Indexation
 
 Seul un build `PUBLIC_SITE_ENV=production` est indexable (`src/shared/site/indexing.ts`) :
 tout autre build pose `noindex, nofollow` sur chaque page, ferme `robots.txt` et coupe
 statcounter. `pnpm check:indexing <noindex|indexable>` vérifie l'attendu sur `dist/` et en
-ligne. Au staging, le conteneur comme le reverse proxy posent `X-Robots-Tag` ; en prod,
-aucun des deux (`deploy/nginx.production.conf`).
+ligne. En prod, ni le conteneur ni le reverse proxy ne posent `X-Robots-Tag`
+(`deploy/nginx.production.conf`). Le staging a été retiré : il se déployait en même temps
+que la prod, du même commit, sans rien vérifier avant elle. S'il revient, il ne doit jamais
+être indexable.
 
 ## Thème et coquille
 
@@ -83,19 +85,16 @@ l'avancement de l'installation, la page le lit dans le cache du service worker
 
 ## Déploiements
 
-À chaque push sur `main`, `deploy-staging.yml` et `deploy.yml` passent par le même
-`deploy-static.yml` : build sur le runner (`validate.yml`), copie dans `releases/` sur le
+À chaque push sur `main`, `deploy.yml` passe par `deploy-static.yml` : build sur le runner (`validate.yml`), copie dans `releases/` sur le
 serveur, bascule du lien `current`, servi par `nginx:1.30-alpine`
 (`deploy/docker-compose.<env>.yml`, `deploy/nginx.<env>.conf`). Pages et `sw.js` en
 `no-cache` ; chaque release reprend les fichiers `_astro/` des builds des 30 derniers jours,
 pour une page ancienne encore ouverte. Retour arrière : rebasculer `current` sur la release
 précédente, gardée.
 
-- Staging : https://staging.nina.fm, `/var/nina/website-staging`, `nina-website-staging`
-  sur le port 3001, fermé aux moteurs.
-- Prod : https://www.nina.fm, `/var/nina/website` (site servi dans `site/`, seul monté),
-  `nina-website` sur le port 3000, indexable. Seul `deploy.yml` versionne
-  (changesets, tag, GitHub Release).
+Prod : https://www.nina.fm, `/var/nina/website` (site servi dans `site/`, seul monté),
+`nina-website` sur le port 3000, indexable. `deploy.yml` versionne aussi (changesets, tag,
+GitHub Release).
 
 Chaque déploiement vérifie le conteneur sur le serveur, puis le site en ligne à travers le
 reverse proxy (nina.fm-webserver) : page du commit, `no-cache`, indexation attendue.

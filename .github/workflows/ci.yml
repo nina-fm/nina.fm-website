@@ -23,5 +23,3 @@ concurrency:
 jobs:
   validate:
     uses: ./.github/workflows/validate.yml
-    with:
-      site-env: production
