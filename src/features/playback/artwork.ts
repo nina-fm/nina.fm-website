@@ -1,5 +1,13 @@
-export const DEFAULT_ARTWORK_FILENAME = '/artwork.png'
-export const DEFAULT_ARTWORK_SIZE = '1024x1024'
+/**
+ * Le logo Nina.fm, quand rien ne donne de pochette (morceau seul, rien à l'antenne) :
+ * les icônes de l'app (`public/maskable_icon_x<taille>.png`), chacune à sa taille
+ * réelle, comme une pochette en plusieurs tailles. L'iPhone n'affichait pas l'ancien
+ * repli, un seul PNG à palette de 1024 px, ni en mini ni en grand.
+ */
+export const DEFAULT_ARTWORK_SIZES = [96, 128, 192, 384, 512]
+const defaultArtworkPath = (size: number): string => `/maskable_icon_x${size}.png`
+/** L'image d'une radio sans pochette propre : remplacée par toutes les tailles du logo. */
+export const DEFAULT_ARTWORK_FILENAME = defaultArtworkPath(512)
 /**
  * Types des images que l'API sert, d'après l'extension. Une table plutôt que la
  * bibliothèque `mime`, dont la base entière pesait 10 ko gzip dans l'îlot du
@@ -29,20 +37,20 @@ export const COVER_ARTWORK_SIZES = ['96x96', '128x128', '192x192', '256x256', '3
  * Pour les covers de taille inconnue, on déclare plusieurs entrées
  * pointant vers la même URL — c'est la pratique recommandée MediaSession.
  *
- * @param filepath - URL de la cover (optionnelle, fallback sur artwork.png)
+ * @param filepath - URL de la cover (optionnelle, repli sur le logo Nina.fm)
  * @param origin   - window.location.origin, passé explicitement pour la testabilité
  */
 export function getArtwork(filepath: unknown, origin: string): MediaImage[] {
-  const defaultArtwork = `${origin}${DEFAULT_ARTWORK_FILENAME}`
-  const raw = typeof filepath === 'string' && filepath ? filepath : defaultArtwork
-  const src = raw.startsWith('/') ? `${origin}${raw}` : raw
-  const isDefault = src === defaultArtwork
-  const type = imageType(src)
-
-  if (isDefault) {
-    return [{ src, sizes: DEFAULT_ARTWORK_SIZE, type }]
+  const raw = typeof filepath === 'string' ? filepath : ''
+  if (!raw || raw === DEFAULT_ARTWORK_FILENAME) {
+    return DEFAULT_ARTWORK_SIZES.map((size) => ({
+      src: `${origin}${defaultArtworkPath(size)}`,
+      sizes: `${size}x${size}`,
+      type: 'image/png',
+    }))
   }
-
+  const src = raw.startsWith('/') ? `${origin}${raw}` : raw
+  const type = imageType(src)
   return COVER_ARTWORK_SIZES.map((sizes) => ({ src, sizes, type }))
 }
 
